@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#050507">
+<meta name="description" content="LUCKI — EVERY ERA LEAVES A TRACE. Walk through a 3D gallery of LUCKI's music, artwork, and archive from 2013 to 2026. Unofficial fan-made experience.">
+<meta property="og:title" content="LUCKI — THE ARCHIVE | Walk Through Every Era">
+<meta property="og:description" content="Eleven worlds. Thirteen years. A 3D museum of albums, artwork and music history.">
+<title>LUCKI — THE ARCHIVE // ENTER THE UNIVERSE</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=DM+Mono:wght@400;500&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<!-- INLINE_CSS -->
+<!-- INLINE_JS -->
+</head>
+<body>
+<div id="scene" aria-hidden="true"></div>
+<div id="sceneFallback" class="scene-fallback" aria-hidden="true"><div class="fallback-halo"></div><div class="fallback-plane p1"></div><div class="fallback-plane p2"></div><div class="fallback-plane p3"></div><div class="fallback-floor"></div></div>
+<div class="grain" aria-hidden="true"></div>
+<div class="scanline" aria-hidden="true"></div>
+<div id="wipe" class="wipe" aria-hidden="true"><span>REWINDING THE ARCHIVE</span><b id="wipeYear">2013</b></div>
+<div id="preloader" class="preloader" aria-live="polite"><span class="mono">INITIALIZING THE ARCHIVE</span><div class="preloader-line"><i id="loadFill"></i></div><span class="tiny" id="loadText">LOADING WORLDS AND RECORDS...</span></div>
+<section id="entry" class="entry" aria-label="Enter the archive">
+  <div class="entry-upper"><span class="eyebrow"><i class="live-pip"></i> UNOFFICIAL FAN-MADE DIGITAL MUSEUM</span><span class="eyebrow">SIGNAL FOUND / 2013—2026</span></div>
+  <div class="entry-core">
+    <div class="entry-caption mono">A CAREER YOU CAN WALK THROUGH <span>↗</span></div>
+    <h1 class="entry-title">LUCKI<span>®</span></h1>
+    <div class="entry-content"><div class="entry-outline">11<span>WORLDS</span></div><p>Every era leaves<br><em>a trace.</em></p></div>
+    <p class="entry-pitch">Not another discography page.<br>Enter the music. Explore the art. Travel through time.</p>
+    <button id="enterButton" class="enter-button">ENTER THE UNIVERSE <span>↗</span></button>
+    <button id="skipButton" class="skip-button">SKIP CINEMATIC INTRO →</button>
+  </div>
+  <div class="entry-lower mono"><span>ARCHIVE ENTRY NO. 001—011</span><span>SCROLL • DRAG • DISCOVER</span><span>DESKTOP / MOBILE</span></div>
+</section>
+<header id="topbar" class="topbar" hidden>
+  <button id="brandButton" class="brand" aria-label="Back to first era">LUCKI<span>.</span><sup>THE ARCHIVE</sup></button>
+  <span class="top-center mono">AN INTERACTIVE JOURNEY THROUGH <b>2013—2026</b></span>
+  <div class="header-actions"><button id="catalogButton" class="header-link">ALL ARTWORK <span>↗</span></button><button id="aboutButton" class="header-menu" aria-label="About and controls">?</button></div>
+</header>
+<nav id="yearRail" class="year-rail" aria-label="Choose a career era" hidden></nav>
+<main id="experience" class="experience" hidden>
+  <div class="chapter-meta mono"><span id="chapterCounter">CHAPTER 001 / 011</span><span class="small-division"></span><span id="eraZone">THE FIRST TRANSMISSION</span></div>
+  <div id="sceneHint" class="scene-hint mono">MOVE CURSOR TO LOOK AROUND <span class="hint-cross">✛</span> CLICK FLOATING ARTWORK</div>
+  <div id="hotspot" class="hotspot mono">CLICK TO INSPECT RECORD <span>↗</span></div>
+  <div class="journey-copy">
+    <div class="top-copy"><span id="eraIndex" class="index-label">01 / 11</span><span class="meta-bracket">◢ HISTORICAL RECORD ◣</span></div>
+    <p id="eraDate" class="era-date mono">2013—14</p>
+    <h2 id="eraTitle" class="era-heading">THE<br>BEGINNING</h2>
+    <div class="era-sub"><i></i><span id="eraTag">THE FIRST TRANSMISSION</span></div>
+    <p id="eraDesc" class="era-desc"></p>
+    <div id="eraProjects" class="era-projects" aria-label="Projects in this era"></div>
+    <div class="era-actions"><button id="inspectButton" class="cta-main">INSPECT THIS ERA'S RECORDS <span>↗</span></button><button id="nextFromCopy" class="cta-next">NEXT ERA <span>→</span></button></div>
+  </div>
+  <div class="edge-label left-edge mono">EST. 2013 // ARCHIVAL SYSTEM</div>
+  <div class="edge-label right-edge mono">LUCKI ECK$ → LUCKI</div>
+  <div class="world-controls"><button id="prevButton" aria-label="Previous era">←</button><div class="control-progress"><div class="control-top mono"><span>TIME TRAVEL</span><span id="progressFraction">01/11</span></div><div class="progress-line"><i id="progressBar"></i></div></div><button id="nextButton" aria-label="Next era">→</button></div>
+  <div class="foot-tip mono"><span>SCROLL TO TRAVEL <b>↓</b></span><span>DRAG TO LOOK <b>↔</b></span><span>11 CHAPTERS / 18 RECORDS</span></div>
+</main>
+<aside id="drawer" class="drawer" aria-label="Era record details" aria-hidden="true">
+  <div class="drawer-top"><span class="mono">THE PHYSICAL ARCHIVE / RECORD INDEX</span><button id="drawerClose" aria-label="Close record details">✕</button></div>
+  <div id="drawerContent" class="drawer-content"></div>
+</aside>
+<section id="catalog" class="catalog-overlay" role="dialog" aria-modal="true" aria-label="Full discography" hidden>
+  <div class="catalog-top"><div><span class="mono">INDEX / ARTIFACTS / 001–018</span><h2>THE COMPLETE<br><em>RECORD WALL.</em></h2></div><button id="catalogClose" class="big-close" aria-label="Close discography">✕</button></div>
+  <div class="catalog-controls"><label class="search-label"><span>⌕</span><input id="catalogSearch" type="search" placeholder="SEARCH AN ALBUM..." aria-label="Search releases"></label><span id="catalogCount" class="mono">18 RECORDS FOUND</span></div>
+  <div id="catalogGrid" class="catalog-grid"></div>
+  <footer class="catalog-footer mono">ARTWORK PROVIDED BY PUBLIC MUSIC-CATALOG PREVIEWS WHEN AVAILABLE. SOURCES: <a href="https://music.apple.com/us/artist/lucki/589757880" target="_blank" rel="noopener">APPLE MUSIC ↗</a> · <a href="https://musicbrainz.org/artist/9ccaca30-60aa-4890-ae6c-ab55225ee274" target="_blank" rel="noopener">MUSICBRAINZ ↗</a></footer>
+</section>
+<section id="info" class="info-overlay" role="dialog" aria-modal="true" aria-label="About the experience" hidden><div class="info-card"><button id="infoClose" class="big-close" aria-label="Close about">✕</button><span class="mono">SYSTEM / INFORMATION</span><h2>IT'S A MUSEUM.<br>NOT A WEBSITE.</h2><p>Journey through eleven different chapters of LUCKI's career. The visual installations change with every era, and every album sleeve is a record you can discover.</p><p><strong>SCROLL / ↑ ↓ / ← →</strong> — Move through time.<br><strong>DRAG OR MOVE MOUSE</strong> — Look around.<br><strong>CLICK ALBUM ART</strong> — Open the record.<br><strong>ALL ARTWORK</strong> — Browse everything.</p><p class="tiny">Unofficial, independent fan-made project. Covers are displayed as references to official releases and link to streaming pages. The animated environments are original interpretations, not historical photos. No unauthorized audio is hosted.</p><a href="https://music.apple.com/us/artist/lucki/589757880" target="_blank" rel="noopener" class="about-link">VISIT OFFICIAL ARTIST CATALOG ↗</a></div></section>
+<div id="cursor" class="cursor" aria-hidden="true"></div>
+<div id="announcer" class="sr-only" role="status" aria-live="polite"></div>
+</body>
+</html>

@@ -1,29 +1,33 @@
-# LUCKI — THE ARCHIVE
+# LUCKI — THE ARCHIVE / IMMERSIVE 3D EXPERIENCE
 
-An unofficial, fan-made interactive artist archive covering 2013–2026. An editorial dark-chrome website with a custom WebGL sculpture, an 11-era explorer, the October 16, 2026 **Last Laugh (archive tape)** interactive 12-record vault, searchable/filterable discography, saved favorites, a command-based archive terminal, and a then/now era comparison.
+An independent, unofficial fan-made digital museum of LUCKI's releases from 2013–2026.
 
-## GitHub Pages publishing
+## What this build contains
 
-This site is intentionally **static** and deployable without Node.js or a build. On GitHub open **Settings → Pages → Build and deployment**, set **Source: Deploy from a branch**, **Branch: lucki-archive**, **Folder: / (root)**, then **Save**. Once Pages finishes publishing, the URL should be `https://luckiattack25.github.io/typaluck/`. (GitHub Pages settings must be changed by a repository administrator; the connected GitHub app cannot modify this setting.)
+- Eleven spatial gallery chapters (2013–2026), each with distinct Three.js installations and movable camera paths.
+- Actual floating, raycast-clickable 3D album sleeves. The public iTunes Search API is used to identify official album cover images and official Apple Music listing URLs; covers not retrievable are displayed as visibly generated archive placeholders rather than invented official art.
+- Last Laugh's twelve selectable 3D vinyl-style records with an accessible documented track list in the record drawer.
+- Mouse-look / click-and-drag camera influence; wheel, arrow keys, Page Up/Down, Home, End, and touch swipe travel across the 11 eras.
+- A responsive record-inspection drawer, comprehensive searchable album-art gallery, and locally saved favorite releases.
+- A distinct fall-back gallery if Three.js, WebGL, or public artwork APIs cannot load; reduced-motion support.
 
-This is a dedicated `lucki-archive` branch and does **not** modify the existing `main` site. Enabling Pages for this branch will change the repository's published Pages site if one is already configured for the repository.
+## Publishing
 
-## Running locally
+GitHub Pages — deploy from branch `lucki-archive`, folder `/ (root)`. The root `index.html` **bundles its own CSS, data, and interaction code** to avoid the asset-loading problem seen in the earlier version. Three.js itself loads as a modern ES module from `https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.module.js`, which requires browser network access to that CDN.
 
-Serve the folder using any static HTTP server, e.g. `python3 -m http.server 8000`, then visit `http://localhost:8000/`. Opening `index.html` directly with `file://` is not guaranteed to work because the JavaScript uses ES modules.
+Edit `style.css`, `data.js`, and `app.js`, then run `python build.py` to regenerate the committed `index.html` bundle before deploying. No Node build step is required. Don't edit bundled JS manually.
 
-## Files
+## Controls
 
-- `index.html` — semantic content and responsive page structure.
-- `style.css` — responsive art direction, layouts, transitions and original visual effects.
-- `app.js` — DOM interactions, WebGL geometry, navigation, filtering, saved favorites, optional storefront artwork fetching.
-- `data.js` — source-backed chronology, catalog, and Last Laugh track durations.
-- `.nojekyll` — avoids Jekyll transformation for Pages.
+- Desktop: enter, mouse drag to look, scroll or use the bottom arrows to move to an adjacent chapter, select any hovering cover/record to inspect it, select any date on the rail to jump.
+- Keyboard: arrows, Page Up/Down, Home/End for navigation; `A` opens artwork gallery; Escape closes overlays.
+- Mobile: swipe horizontally/vertically between chapters or use buttons; tap record labels/drawer controls.
 
 ## Sources and limitations
 
-Primary references: [Apple Music artist page](https://music.apple.com/us/artist/lucki/589757880), [Last Laugh (archive tape)](https://music.apple.com/us/album/last-laugh-archive-tape/6821145872), [MusicBrainz LUCKI artist](https://musicbrainz.org/artist/9ccaca30-60aa-4890-ae6c-ab55225ee274), [MusicBrainz releases](https://musicbrainz.org/artist/9ccaca30-60aa-4890-ae6c-ab55225ee274/releases), and [AllMusic](https://www.allmusic.com/artist/lucki-mn0003887247).
+The project and its visual installations are fan-made, not endorsed by LUCKI or any record label. Track titles, release sequence, and basic historical descriptions are stored in `data.js` and compiled into the release. Music metadata and cover-art previews are queried from Apple's public iTunes catalog at runtime. Release information has been checked against the official artist catalog and the Last Laugh Apple Music listing. Album artwork remains copyrighted to its rights owners. The site links to official music catalog pages and does not host full audio, lyrics, unauthorized downloads or leaks. Three.js requires WebGL-capable browser and public CDN access; other UI remains functional if unavailable.
 
-Last Laugh's track names, sequence, durations, release date, runtime and label were checked against Apple Music on October 16, 2026. Historical era commentary is editorial interpretation, not a claim of specific studio dates. Discography is a **curated selection**, not a complete catalog of every single or every credit. No unverifiable release history or alleged recording dates are assigned to Last Laugh tracks. Optional album artwork is loaded at runtime from the public iTunes storefront API; if unavailable, original abstract layouts appear, clearly distinguished from official art. No copyrighted tracks, leaks or lyrics are hosted. Streaming buttons link to official storefronts. The 3D sculpture uses Three.js through a CDN with a usable no-WebGL fallback; it is not a separate fully modeled 3D scene for each era. Mobile and reduced-motion modes have purposeful fallbacks.
-
-This fan archive is not affiliated with LUCKI, EMPIRE, or their representatives. Names and titles remain property of their respective holders.
+References:
+- https://music.apple.com/us/artist/lucki/589757880
+- https://music.apple.com/us/album/last-laugh-archive-tape/6821145872
+- https://musicbrainz.org/artist/9ccaca30-60aa-4890-ae6c-ab55225ee274
