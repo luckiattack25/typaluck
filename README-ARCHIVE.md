@@ -1,36 +1,29 @@
-# LUCKI — THE ARCHIVE / IMMERSIVE 3D EXPERIENCE
+# LUCKI — THE ARCHIVE
 
-An independent, unofficial fan-made digital museum of LUCKI's releases from 2013–2026.
+An **unofficial** interactive LUCKI career museum spanning 17 eras and 18 releases, with a separate 3D environment for each era and a searchable album gallery.
 
-## What this build contains
+## Hosting
 
-- Eleven spatial gallery chapters (2013–2026), each with distinct Three.js installations and movable camera paths.
-- Actual floating, raycast-clickable 3D album sleeves. The public iTunes Search API is used to identify official album cover images and official Apple Music listing URLs; covers not retrievable are displayed as visibly generated archive placeholders rather than invented official art.
-- Last Laugh's twelve selectable 3D vinyl-style records with an accessible documented track list in the record drawer.
-- Mouse-look / click-and-drag camera influence; wheel, arrow keys, Page Up/Down, Home, End, and touch swipe travel across the 17 eras.
-- A responsive record-inspection drawer, comprehensive searchable album-art gallery, and locally saved favorite releases.
-- A distinct fall-back gallery if Three.js, WebGL, or public artwork APIs cannot load; reduced-motion support.
+`index.html` is fully self-contained for GitHub Pages (includes data, CSS and application logic). GitHub Pages should be configured to deploy `lucki-archive` → `/ (root)`.
 
-## Publishing
+For development, edit `data.js`, `app.js`, `style.css`, or `index.template.html` and regenerate the self-contained page with:
 
-GitHub Pages — deploy from branch `lucki-archive`, folder `/ (root)`. The root `index.html` **bundles its own CSS, data, and interaction code** to avoid the asset-loading problem seen in the earlier version. Three.js itself loads as a modern ES module from `https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.module.js`, which requires browser network access to that CDN.
+```bash
+python build.py
+```
 
-Edit `style.css`, `data.js`, and `app.js`, then run `python build.py` to regenerate the committed `index.html` bundle before deploying. No Node build step is required. Don't edit bundled JS manually.
+## Tracks and short previews
 
-## Controls
+Open any record in the 3D museum or album gallery to access its **Track Index**. The site requests song metadata using each album's exact public Apple/iTunes collection ID. If an older ID is retired, it tries a strictly matching album-title lookup and rechecks that collection's track IDs and artist before displaying results. Hovering a song starts its publicly supplied short preview; moving away pauses it. Click works as a fallback if your browser blocks sound on hover. Playback is stopped when leaving a record or hiding the tab.
 
-- Desktop: enter, mouse drag to look, scroll or use the bottom arrows to move to an adjacent chapter, select any hovering cover/record to inspect it, select any date on the rail to jump.
-- Keyboard: arrows, Page Up/Down, Home/End for navigation; `A` opens artwork gallery; Escape closes overlays.
-- Mobile: swipe horizontally/vertically between chapters or use buttons; tap record labels/drawer controls.
+For releases unavailable from Apple's lookup, the site never displays guessed tracks or substitutes audio from a different artist. `Son of Sam` uses its independently published seven-track listing, and `Last Laugh` has its established 12-track list as a fallback. If no official short preview is returned, that track is displayed as unavailable for on-page playback and visitors can open the streaming release link instead. No full songs are hosted.
 
-## Sources and limitations
+## Sharp captions
 
-The project and its visual installations are fan-made, not endorsed by LUCKI or any record label. Track titles, release sequence, and basic historical descriptions are stored in `data.js` and compiled into the release. Music metadata and cover-art previews are queried from Apple's public iTunes catalog at runtime. Release information has been checked against the official artist catalog and the Last Laugh Apple Music listing. Album artwork remains copyrighted to its rights owners. The site links to official music catalog pages and does not host full audio, lyrics, unauthorized downloads or leaks. Three.js requires WebGL-capable browser and public CDN access; other UI remains functional if unavailable.
+Labels beneath 3D cover objects are real high-resolution HTML text projected from their 3D anchor points rather than low-resolution canvas textures. They follow the scene's camera and remain interactive.
 
-References:
-- https://music.apple.com/us/artist/lucki/589757880
-- https://music.apple.com/us/album/last-laugh-archive-tape/6821145872
-- https://musicbrainz.org/artist/9ccaca30-60aa-4890-ae6c-ab55225ee274
+## Limitations
 
-## Illustrated eras and artwork
-The seventeen scene stops follow the Last Laugh illustration provided by the user, in order: Alternative Trap, Body High, X, Freewave, Son of Sam, Freewave 2, Watch My Back, Days B4 II, Freewave 3, Days B4 III, Almost There, WAKE UP LUCKI, FLAWLESS LIKE ME, s*x m*ney dr*gs, GEMINI!, Dr*gs R Bad, and the last unnamed Last Laugh figure. DaysB4Bad* remains an additional 2026 release in the discography without adding another illustrated era. Verified album identifiers from Apple Music are pinned to avoid false cover matches. Son of Sam uses an artwork URL returned by a verified streaming listing. If the album provider blocks an image, the gallery falls back to a clearly labeled stylized archival graphic.
+Public streaming-catalog APIs and the Three.js module are external resources; availability varies by browser or network restrictions. The main archive has a CSS-based fallback if WebGL is disabled or unavailable. Audio playback can require an explicit user click depending on browser autoplay policy.
+
+Data sources include publicly available Apple Music/iTunes metadata, the artist's verified releases, and original Son of Sam listings. The graphics are creative fan-made interpretations and are not represented as official artist artwork.

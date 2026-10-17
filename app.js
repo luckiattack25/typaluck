@@ -1,4 +1,4 @@
-import {ERAS,RELEASES,TRACKS,APPLE_ARTIST,LAST_LAUGH} from './data.js';
+import {ERAS,RELEASES,TRACKS,SON_OF_SAM_TRACKS,APPLE_ARTIST,LAST_LAUGH} from './data.js';
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
@@ -6,6 +6,9 @@ const clamp = (v,min,max) => Math.min(max,Math.max(min,v));
 const prefersReduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const touchScreen = matchMedia('(pointer:coarse)').matches;
 const app={index:0,entered:false,drawer:false,detail:null,catalog:false,info:false,world:null,transitioning:false,loadingCovers:false,coverUrls:new Map(),imageTargets:new Map(),rendererOkay:false,favorites:new Set(),mode:'idle'};
+const albumTracks=new Map(), trackRequests=new Map();
+const previewAudio=new Audio();previewAudio.preload='none';previewAudio.volume=.72;
+let previewSequence=0, playingRow=null, activePreviewTrack=null;
 try{app.favorites=new Set(JSON.parse(localStorage.getItem('lucki-archive-saved-v2')||'[]'))}catch{}
 
 function escapeHTML(input){return String(input??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
@@ -15,6 +18,80 @@ function releaseSearchLink(r){return r.url||`https://music.apple.com/us/search?t
 function releaseLink(r){return app.imageTargets.get(r.id)?.link||releaseSearchLink(r)}
 function coverCard(r){const src=app.coverUrls.get(r.id);const title=escapeHTML(r.title);const colorA=r.color?.[0]||'#454544',colorB=r.color?.[1]||'#121415';return `<div class="cover-image" style="--cover1:${colorA};--cover2:${colorB}"><span class="cover-letter" aria-label="Artwork unavailable">${escapeHTML(r.title.slice(0,24))}</span>${src?`<img src="${escapeHTML(src)}" alt="${title} — cover artwork" loading="lazy" onerror="this.remove()">`:''}</div>`}
 function officialRelease(r){const best=app.imageTargets.get(r.id);return best?.link||releaseSearchLink(r)}
+// Tracks come from exact Apple Music/iTunes collection IDs, never from a fuzzy song search.
+// Only Apple-supplied previewUrl values can be played; full copyrighted tracks are not hosted.
+function timeLabel(milliseconds){if(!Number.isFinite(milliseconds)||milliseconds<=0)return '—';const n=Math.round(milliseconds/1000);return Math.floor(n/60)+':'+String(n%60).padStart(2,'0')}
+function fallbackTracks(r){return r.id==='last-laugh'?TRACKS.map((t,i)=>({name:t.name,duration:t.duration,number:i+1,previewUrl:null,context:t.context||''})):r.id==='son-of-sam'?SON_OF_SAM_TRACKS.map((t,i)=>({name:t.name,duration:t.duration,number:i+1,previewUrl:null,context:''})):[]}
+function trackRows(r){return albumTracks.get(r.id)||fallbackTracks(r)}
+function stopPreview(){previewSequence++;previewAudio.pause();playingRow=null;activePreviewTrack=null;document.querySelectorAll('.song-row.is-playing').forEach(el=>el.classList.remove('is-playing'));const hud=$('#previewHud');if(hud)hud.hidden=true}
+previewAudio.addEventListener('ended',stopPreview);
+function showPreviewStatus(song,status){$('#previewHud').hidden=false;$('#previewSong').textContent=song;$('#previewStatus').textContent=status}
+async function startPreview(track,row){
+ if(!track.previewUrl)return;
+ if(activePreviewTrack===track.previewUrl&&!previewAudio.paused)return;
+ const request=++previewSequence;
+ previewAudio.pause();playingRow?.classList.remove('is-playing');playingRow=row;activePreviewTrack=track.previewUrl;
+ showPreviewStatus(track.name,'STARTING OFFICIAL PREVIEW…');
+ previewAudio.src=track.previewUrl;
+ try{
+  await previewAudio.play();
+  if(request!==previewSequence){previewAudio.pause();return}
+  row.classList.add('is-playing');showPreviewStatus(track.name,'◉ PLAYING SHORT PREVIEW · HOVER OFF TO STOP');
+ }catch(e){
+  if(request!==previewSequence)return;
+  activePreviewTrack=null;row.classList.remove('is-playing');
+  showPreviewStatus(track.name,'BROWSER BLOCKED HOVER AUDIO · CLICK TO PLAY');
+  // The row is still available for an explicit click gesture, and the rest of the site works.
+  console.info('Preview cannot autoplay; click the song instead.',e?.name||'');
+ }
+}
+function bindSongRows(){
+ $$('#drawerContent .song-row').forEach(row=>{
+  const id=row.dataset.release, idx=Number(row.dataset.track);const release=RELEASES.find(r=>r.id===id);
+  const track=release&&trackRows(release)[idx];if(!track||!track.previewUrl)return;
+  row.addEventListener('mouseenter',()=>{void startPreview(track,row)});
+  row.addEventListener('mouseleave',()=>{if(playingRow===row||activePreviewTrack===track.previewUrl)stopPreview()});
+  row.addEventListener('click',()=>{if(playingRow===row&&!previewAudio.paused){stopPreview()}else void startPreview(track,row)});
+  row.addEventListener('focus',()=>{row.dataset.focus='true'});
+ });
+}
+async function loadAlbumTracks(release){
+ if(albumTracks.has(release.id))return albumTracks.get(release.id);
+ if(trackRequests.has(release.id))return trackRequests.get(release.id);
+ if(!release.appleId){const rows=fallbackTracks(release);albumTracks.set(release.id,rows);return rows}
+ const promise=(async()=>{
+  let rows=[];
+  try{
+   const fetchCollection=async id=>fetchJson('https://itunes.apple.com/lookup?'+new URLSearchParams({id:String(id),entity:'song',country:'US',limit:'250'}),8500);
+   let actualId=release.appleId;
+   let json=await fetchCollection(actualId);
+   let candidates=(json.results||[]).filter(t=>t.wrapperType==='track'&&t.kind==='song'&&String(t.collectionId)===String(actualId)&&/lucki/i.test(String(t.artistName||'')));
+   // If an old collection ID was retired, search by exact release title, never fuzzy song matches.
+   if(!candidates.length){
+     const results=await fetchJson('https://itunes.apple.com/search?'+new URLSearchParams({term:'LUCKI '+release.title,entity:'album',country:'US',limit:'40'}),6500);
+     const matched=(results.results||[]).find(x=>x.collectionId&&/lucki/i.test(String(x.artistName||''))&&normalize(x.collectionName)===normalize(release.title));
+     if(matched){actualId=matched.collectionId;json=await fetchCollection(actualId);
+       candidates=(json.results||[]).filter(t=>t.wrapperType==='track'&&t.kind==='song'&&String(t.collectionId)===String(actualId)&&/lucki/i.test(String(t.artistName||'')));
+     }
+   }
+   const byTrack=new Map();
+   for(const t of candidates){const key=String(t.discNumber||1)+':'+String(t.trackNumber||t.trackId);if(!byTrack.has(key))byTrack.set(key,t)}
+   rows=[...byTrack.values()].sort((a,b)=>(a.discNumber||1)-(b.discNumber||1)||(a.trackNumber||0)-(b.trackNumber||0)).map((t,i)=>({name:String(t.trackName||'Untitled'),duration:timeLabel(t.trackTimeMillis),number:i+1,previewUrl:/^https:\/\//.test(t.previewUrl||'')?t.previewUrl:null,context:''}));
+  }catch(error){console.info('Album tracklist unavailable for '+release.title,error?.message||'network error')}
+  if(!rows.length)rows=fallbackTracks(release);
+  albumTracks.set(release.id,rows);
+  if(app.drawer&&app.detail===release.id)renderDrawer();
+  return rows;
+ })();
+ trackRequests.set(release.id,promise);
+ try{return await promise}finally{trackRequests.delete(release.id)}
+}
+function songListHTML(r){
+ const list=trackRows(r),isLoading=trackRequests.has(r.id);
+ if(!list.length)return `<section class="track-list"><div class="songs-heading"><span>TRACK INDEX</span><small>${isLoading?'FETCHING OFFICIAL TRACKLIST…':'TRACKLIST UNAVAILABLE'}</small></div><p class="track-empty">${isLoading?'Loading tracks from Apple Music…':'This release is not currently returned by the music catalog. Open its official listing to browse songs.'}</p></section>`;
+ return `<section class="track-list"><div class="songs-heading"><span>TRACK INDEX / ${String(list.length).padStart(2,'0')}</span><small>HOVER TO HEAR · CLICK TO PLAY</small></div><div class="songs-grid">${list.map((track,i)=>`<button type="button" class="song-row" data-release="${escapeHTML(r.id)}" data-track="${i}" ${track.previewUrl?'': 'disabled'} title="${track.previewUrl?'Hover or click to play preview':'Preview not available for this track'}"><span class="song-number">${String(track.number||i+1).padStart(2,'0')}</span><span class="song-title">${escapeHTML(track.name)}${track.context?`<small>${escapeHTML(track.context)}</small>`:''}</span><span class="song-duration">${escapeHTML(track.duration||'—')}</span><span class="song-play">${track.previewUrl?'▶':'—'}</span></button>`).join('')}</div><p class="track-credit">${list.some(t=>t.previewUrl)?'Audio is a short, official catalog preview. Some tracks are unavailable.':'Tracklist verified; official playback previews are not available here. Use the streaming link above.'}</p></section>`;
+}
+
 function eraReleaseList(index){const id=ERAS[index].id;return RELEASES.filter(r=>r.era===id).sort((a,b)=>(a.id===id?-1:0)-(b.id===id?-1:0))}
 function announce(text){$('#announcer').textContent=text}
 
@@ -29,24 +106,25 @@ function updateEraUI(){const e=ERAS[app.index];document.documentElement.style.se
 function createRail(){$('#yearRail').innerHTML=ERAS.map((e,i)=>`<button class="year-stop ${i===0?'active':''}" data-era="${i}" aria-label="Go to ${e.title}, ${e.year}" title="${escapeHTML(e.title)}"><span class="dot"></span><span>${String(i+1).padStart(2,'0')}</span></button>`).join('');$$('.year-stop').forEach(el=>el.addEventListener('click',()=>goTo(Number(el.dataset.era))))}
 
 let travelTimer=null;
-function goTo(index,{instant=false}={}){const next=clamp(index,0,ERAS.length-1);if(next===app.index&&!instant)return;if(app.catalog||app.info)return;closeDrawer();const distance=Math.abs(next-app.index);app.index=next;updateEraUI();if(app.world)app.world.setEra(next,instant);if(!prefersReduced&&!instant&&distance>1){const w=$('#wipe');$('#wipeYear').textContent=ERAS[next].year.split('—')[0];w.classList.remove('in');void w.offsetWidth;w.classList.add('in');clearTimeout(travelTimer);travelTimer=setTimeout(()=>w.classList.remove('in'),1000)} }
+function goTo(index,{instant=false}={}){stopPreview();const next=clamp(index,0,ERAS.length-1);if(next===app.index&&!instant)return;if(app.catalog||app.info)return;closeDrawer();const distance=Math.abs(next-app.index);app.index=next;updateEraUI();if(app.world)app.world.setEra(next,instant);if(!prefersReduced&&!instant&&distance>1){const w=$('#wipe');$('#wipeYear').textContent=ERAS[next].year.split('—')[0];w.classList.remove('in');void w.offsetWidth;w.classList.add('in');clearTimeout(travelTimer);travelTimer=setTimeout(()=>w.classList.remove('in'),1000)} }
 function next(){if(app.entered)goTo(app.index+1)}
 function previous(){if(app.entered)goTo(app.index-1)}
 
-function openDrawer(id){const r=id?RELEASES.find(r=>r.id===id):null;app.drawer=true;app.detail=r?.id||null;renderDrawer();$('#drawer').classList.add('open');$('#drawer').setAttribute('aria-hidden','false');$('#drawerClose').focus({preventScroll:true})}
-function closeDrawer(){app.drawer=false;$('#drawer').classList.remove('open');$('#drawer').setAttribute('aria-hidden','true')}
-function renderDrawer(){const era=ERAS[app.index];const rs=eraReleaseList(app.index);const target=RELEASES.find(r=>r.id===app.detail);
- if(target){const saved=app.favorites.has(target.id);const trackHtml=target.id==='last-laugh'?`<div class="track-list"><p class="mono">LAST LAUGH / ALL 12 RECORDS</p>${TRACKS.map((t,i)=>`<div class="track-row"><span class="track-num">${String(i+1).padStart(2,'0')}</span><span>${escapeHTML(t.name)}</span><span class="track-time">${t.duration}</span>${t.context?`<small>${escapeHTML(t.context)}</small>`:''}</div>`).join('')}</div>`:'';
+function openDrawer(id){stopPreview();const r=id?RELEASES.find(r=>r.id===id):null;app.drawer=true;app.detail=r?.id||null;renderDrawer();$('#drawer').classList.add('open');$('#drawer').setAttribute('aria-hidden','false');$('#drawerClose').focus({preventScroll:true})}
+function closeDrawer(){stopPreview();app.drawer=false;$('#drawer').classList.remove('open');$('#drawer').setAttribute('aria-hidden','true')}
+function renderDrawer(){if(playingRow)stopPreview();const era=ERAS[app.index];const rs=eraReleaseList(app.index);const target=RELEASES.find(r=>r.id===app.detail);
+ if(target){const saved=app.favorites.has(target.id);const trackHtml=songListHTML(target);
  $('#drawerContent').innerHTML=`<button class="back-link" id="backToEra">← BACK TO ERA ${String(app.index+1).padStart(2,'0')}</button><p class="drawer-era-index mono">OFFICIAL RELEASE / ${target.year} / ${escapeHTML(target.type.toUpperCase())}</p><div class="record-detail"><div class="hero-cover">${coverCard(target)}</div><h3>${escapeHTML(target.title)}</h3><p>${escapeHTML(target.notes)}</p><a class="record-link" href="${escapeHTML(officialRelease(target))}" target="_blank" rel="noopener noreferrer">OPEN OFFICIAL MUSIC LISTING ↗</a><p><button id="favoriteButton" class="back-link">${saved?'★ SAVED TO YOUR ARCHIVE':'☆ SAVE TO YOUR ARCHIVE'}</button></p>${trackHtml}<p class="drawer-note">Official cover imagery appears when a public music-catalog preview is available. Recording periods are not inferred from release dates.</p></div>`;
+ bindSongRows();if(!albumTracks.has(target.id)&&!trackRequests.has(target.id))void loadAlbumTracks(target);
  $('#backToEra').addEventListener('click',()=>{app.detail=null;renderDrawer()});$('#favoriteButton').addEventListener('click',()=>{if(app.favorites.has(target.id))app.favorites.delete(target.id);else app.favorites.add(target.id);try{localStorage.setItem('lucki-archive-saved-v2',JSON.stringify([...app.favorites]))}catch{}renderDrawer()});
  }else{
  $('#drawerContent').innerHTML=`<p class="drawer-era-index mono">CHAPTER ${String(app.index+1).padStart(3,'0')} / ${era.year} / ${era.visual}</p><h2 class="drawer-title">${escapeHTML(era.title)}</h2><p class="drawer-describe">${escapeHTML(era.description)}</p><p class="mono" style="color:var(--sharp);padding:10px 0 15px">SELECT A RECORD TO INSPECT ↘</p><div class="drawer-covers">${rs.map(r=>`<button class="drawer-release" data-record="${r.id}">${coverCard(r)}<span class="cover-meta"><strong>${escapeHTML(r.title)}</strong><em>${r.year}</em></span></button>`).join('')}</div>${app.index===ERAS.length-1?`<p class="drawer-note">The 2026 archival release revisits recordings from earlier periods. Individual recording dates are only shown when verified.</p>`:''}`;
  $$('.drawer-release').forEach(b=>b.addEventListener('click',()=>{app.detail=b.dataset.record;renderDrawer()}));}
 }
 function renderCatalog(){const needle=$('#catalogSearch').value.trim().toLowerCase();const found=RELEASES.filter(r=>(r.title+' '+r.year+' '+r.type+' '+(ERAS.find(e=>e.id===r.era)?.short||'')).toLowerCase().includes(needle));$('#catalogCount').textContent=found.length+' RECORDS FOUND';$('#catalogGrid').innerHTML=found.map(r=>`<button class="catalog-item" data-record="${r.id}" title="Travel to ${escapeHTML(r.title)}">${coverCard(r)}<span class="cover-meta"><strong>${escapeHTML(r.title)}</strong><em>${r.year} ↗</em></span></button>`).join('')||'<p class="mono">NO MATCHING RELEASES. TRY A DIFFERENT SEARCH.</p>';$$('.catalog-item').forEach(el=>el.addEventListener('click',()=>{const r=RELEASES.find(x=>x.id===el.dataset.record);if(!r)return;closeCatalog();goTo(ERAS.findIndex(e=>e.id===r.era),{instant:true});openDrawer(r.id)}))}
-function openCatalog() {closeDrawer();app.catalog=true;$('#catalog').hidden=false;renderCatalog();$('#catalogSearch').focus({preventScroll:true})}
+function openCatalog() {stopPreview();closeDrawer();app.catalog=true;$('#catalog').hidden=false;renderCatalog();$('#catalogSearch').focus({preventScroll:true})}
 function closeCatalog(){app.catalog=false;$('#catalog').hidden=true}
-function openInfo(){closeDrawer();app.info=true;$('#info').hidden=false;$('#infoClose').focus({preventScroll:true})}
+function openInfo(){stopPreview();closeDrawer();app.info=true;$('#info').hidden=false;$('#infoClose').focus({preventScroll:true})}
 function closeInfo(){app.info=false;$('#info').hidden=true}
 
 // A curated collection ID per release prevents false matches from lookalike album names.
@@ -96,12 +174,15 @@ async function initWorld(){let THREE;try{THREE=await import('https://cdn.jsdeliv
  const floor=new THREE.Mesh(new THREE.PlaneGeometry(42,G*ERAS.length+140),groundM);floor.rotation.x=-Math.PI/2;floor.position.set(0,-3,centerZ((ERAS.length-1)/2));scene.add(floor);
  const grid=new THREE.GridHelper(G*ERAS.length+90,105,'#394944','#1c2421');grid.position.set(0,-2.975,centerZ((ERAS.length-1)/2));const gmat=Array.isArray(grid.material)?grid.material[0]:grid.material;gmat.transparent=true;gmat.opacity=.22;scene.add(grid);
  const sideLines=[];for(const side of [-1,1]){for(let j=0;j<ERAS.length;j++){const stage=worldText;const beam=addBox(world,[.055,.055,G-.8],[side*9.7,-2.86,centerZ(j)],new THREE.MeshBasicMaterial({color:colors[j],transparent:true,opacity:.33}));sideLines.push(beam);}}
- const groups=[];
+ const groups=[],worldLabelTargets=[];
  function addParticles(group,col,num=80){const arr=new Float32Array(num*3);for(let i=0;i<num;i++){arr[i*3]=(Math.random()-.5)*22;arr[i*3+1]=Math.random()*15-3;arr[i*3+2]=(Math.random()-.5)*25;}const geom=new THREE.BufferGeometry();geom.setAttribute('position',new THREE.BufferAttribute(arr,3));const pts=new THREE.Points(geom,new THREE.PointsMaterial({color:col,size:touchScreen?.05:.064,transparent:true,opacity:.65,depthWrite:false,sizeAttenuation:true}));group.add(pts);animations.push({obj:pts,spin:.001,kind:'particle'})}
  function arch(group,z,col){const tmat=new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:.38,depthWrite:false});addBox(group,[.09,11,.09],[-9,2,z],tmat);addBox(group,[.09,11,.09],[9,2,z],tmat);addBox(group,[18,.09,.09],[0,7.5,z],tmat)}
  function giveArtworkMesh(group,r,pos,size,i){const holder=new THREE.Group();holder.position.set(...pos);holder.rotation.y=[.12,-.17,.2][i%3];group.add(holder);const [w,h]=size;const artMat=new THREE.MeshBasicMaterial({color:'#ffffff',side:THREE.DoubleSide});let c=createLabelCanvas(r.title,`${r.year} / ARCHIVE RECORD — SELECT TO VIEW`,ERAS[active].accent,512,512);const placeholder=new THREE.CanvasTexture(c);placeholder.colorSpace=THREE.SRGBColorSpace;artMat.map=placeholder;const art=new THREE.Mesh(new THREE.PlaneGeometry(w,h),artMat);art.position.z=.14;art.userData={releaseId:r.id,eraIndex:active};holder.add(art);interactive.push(art);frame(holder,w+.18,h+.18,.1);
  addBox(holder,[w+.25,h+.25,.13],[0,0,-.025],mat('#151718',.7,.55));
- const caption=worldText(holder,r.title,`${r.year} / SELECT TO INSPECT`,ERAS[active].accent,[0,-h/2-.53,.18],[w+.1,.54]);caption.userData={releaseId:r.id,eraIndex:active};interactive.push(caption);
+ const caption=document.createElement('button');caption.type='button';caption.className='world-caption';caption.dataset.release=r.id;
+ caption.innerHTML=`<strong>${escapeHTML(r.title)}</strong><span>${r.year} &nbsp; / &nbsp; INSPECT RECORD ↗</span>`;
+ caption.addEventListener('click',()=>openDrawer(r.id));$('#worldLabels').appendChild(caption);
+ worldLabelTargets.push({el:caption,holder,y:-h/2-.56,eraIndex:active});
  // The art is actually a 3D plane in the gallery. It can rotate, light-react, and be clicked.
  animations.push({obj:holder,kind:'art',x:pos[0],y:pos[1],offset:active*.6+i*2,baseRot:holder.rotation.y});
  textureTargets.set(r.id,art);
@@ -153,6 +234,15 @@ async function initWorld(){let THREE;try{THREE=await import('https://cdn.jsdeliv
  let frames=0,rafId=0;camera.position.set(0,2.6,targetCameraZ);camera.lookAt(1.8,2.3,centerZ(0)-3);
  function animate(){if(disposed)return;rafId=requestAnimationFrame(animate);const dt=Math.min(clock.getDelta(),.05);motion+=dt;const targetX=(pointerX*.55)+dragOffset;dragOffset*=.984;const vx=targetX+Math.sin(motion*.18)*.13;const destZ=targetCameraZ;groups.forEach((g,j)=>{g.visible=Math.abs(j-app.index)<=1});const eased=prefersReduced?.13:.035;camera.position.z+=(destZ-camera.position.z)*eased;camera.position.x+=(vx-camera.position.x)*.03;camera.position.y+=(2.75-pointerY*.35-camera.position.y)*.034;camera.lookAt(1.9+vx*.42,2.2-pointerY*.24,camera.position.z-14.5);
  if(!prefersReduced){for(const v of animations){const o=v.obj,s=motion+v.offset;if(v.kind==='art'){o.position.y=v.y+Math.sin(s*.48)*.16;o.rotation.y=v.baseRot+Math.sin(s*.29)*.08}else if(v.kind==='shard'){o.rotation.z+=dt*.042}else if(v.kind==='slowspin'){o.rotation.y+=dt*.07}else if(v.kind==='spin'){o.rotation.y+=dt*.14;o.rotation.z+=dt*.1}else if(v.kind==='particle'){o.rotation.y+=dt*.004}else if(v.kind==='vinyl'){o.rotation.z+=dt*.16;o.position.z=-2.75+Math.sin(s*.6)*.13}else if(v.kind==='vault'){o.rotation.z+=dt*.012}}}
+ // CSS-backed album captions stay sharp even on high-DPI screens and at small 3D sizes.
+  for(const l of worldLabelTargets){
+   if(l.eraIndex!==app.index||!app.entered||app.drawer||app.catalog||app.info){l.el.hidden=true;continue}
+   l.holder.updateWorldMatrix(true,false);
+   const point=l.holder.localToWorld(new THREE.Vector3(0,l.y,.2));
+   point.project(camera);
+   if(point.z>1||point.z< -1||Math.abs(point.x)>1.1||Math.abs(point.y)>1.1){l.el.hidden=true;continue}
+   l.el.hidden=false;l.el.style.left=((point.x+1)*innerWidth/2)+'px';l.el.style.top=((-point.y+1)*innerHeight/2)+'px';
+  }
  renderer.render(scene,camera);frames++}
  animate();
  const resize=()=>{camera.aspect=innerWidth/innerHeight;camera.fov=touchScreen?68:52;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio||1,touchScreen?1.4:1.8))};window.addEventListener('resize',resize,{passive:true});
@@ -161,7 +251,7 @@ async function initWorld(){let THREE;try{THREE=await import('https://cdn.jsdeliv
 }
 
 function enter(){if(app.entered)return;app.entered=true;$('#preloader').hidden=true;$('#entry').classList.add('hidden-entry');setTimeout(()=>{$('#entry').hidden=true},850);$('#topbar').hidden=false;$('#experience').hidden=false;$('#yearRail').hidden=false;$('#nextButton').focus({preventScroll:true});}
-function initControls(){createRail();updateEraUI();$('#enterButton').addEventListener('click',enter);$('#skipButton').addEventListener('click',enter);$('#brandButton').addEventListener('click',()=>goTo(0));$('#inspectButton').addEventListener('click',()=>openDrawer());$('#nextFromCopy').addEventListener('click',next);$('#prevButton').addEventListener('click',previous);$('#nextButton').addEventListener('click',next);$('#drawerClose').addEventListener('click',closeDrawer);$('#catalogButton').addEventListener('click',openCatalog);$('#catalogClose').addEventListener('click',closeCatalog);$('#catalogSearch').addEventListener('input',renderCatalog);$('#aboutButton').addEventListener('click',openInfo);$('#infoClose').addEventListener('click',closeInfo);
+function initControls(){$('#previewStop').addEventListener('click',stopPreview);document.addEventListener('visibilitychange',()=>{if(document.hidden)stopPreview()});createRail();updateEraUI();$('#enterButton').addEventListener('click',enter);$('#skipButton').addEventListener('click',enter);$('#brandButton').addEventListener('click',()=>goTo(0));$('#inspectButton').addEventListener('click',()=>openDrawer());$('#nextFromCopy').addEventListener('click',next);$('#prevButton').addEventListener('click',previous);$('#nextButton').addEventListener('click',next);$('#drawerClose').addEventListener('click',closeDrawer);$('#catalogButton').addEventListener('click',openCatalog);$('#catalogClose').addEventListener('click',closeCatalog);$('#catalogSearch').addEventListener('input',renderCatalog);$('#aboutButton').addEventListener('click',openInfo);$('#infoClose').addEventListener('click',closeInfo);
  let lastWheel=0,wheelAccum=0;window.addEventListener('wheel',e=>{if(!app.entered||app.drawer||app.catalog||app.info)return;e.preventDefault();const now=performance.now();if(now-lastWheel<800)return;wheelAccum+=e.deltaY;if(Math.abs(wheelAccum)<18)return;goTo(app.index+Math.sign(wheelAccum));lastWheel=now;wheelAccum=0},{passive:false});
  window.addEventListener('keydown',e=>{if(e.key==='Escape'){if(app.catalog)closeCatalog();else if(app.info)closeInfo();else if(app.drawer)closeDrawer();return}if(!app.entered||app.drawer||app.catalog||app.info||['INPUT','TEXTAREA'].includes(document.activeElement?.tagName))return;if(['ArrowRight','ArrowDown','PageDown',' '].includes(e.key)){e.preventDefault();next()}else if(['ArrowLeft','ArrowUp','PageUp'].includes(e.key)){e.preventDefault();previous()}else if(e.key==='Home'){e.preventDefault();goTo(0)}else if(e.key==='End'){e.preventDefault();goTo(ERAS.length-1)}else if(e.key.toLowerCase()==='a')openCatalog()});
  let sx=0,sy=0;const touchMoveStart=e=>{sx=e.touches[0].clientX;sy=e.touches[0].clientY};window.addEventListener('touchstart',touchMoveStart,{passive:true});window.addEventListener('touchend',e=>{if(!app.entered||app.drawer||app.catalog||app.info)return;const dx=e.changedTouches[0].clientX-sx,dy=e.changedTouches[0].clientY-sy;if(Math.abs(dx)>60||Math.abs(dy)>70){if(Math.abs(dx)>Math.abs(dy))goTo(app.index+(dx<0?1:-1));else goTo(app.index+(dy<0?1:-1))}},{passive:true});

@@ -32,6 +32,7 @@
 </head>
 <body>
 <div id="scene" aria-hidden="true"></div>
+<div id="worldLabels" aria-label="Interactive album captions"></div>
 <div id="sceneFallback" class="scene-fallback" aria-hidden="true"><div class="fallback-halo"></div><div class="fallback-plane p1"></div><div class="fallback-plane p2"></div><div class="fallback-plane p3"></div><div class="fallback-floor"></div></div>
 <div class="grain" aria-hidden="true"></div>
 <div class="scanline" aria-hidden="true"></div>
@@ -74,6 +75,7 @@
   <div class="world-controls"><button id="prevButton" aria-label="Previous era">←</button><div class="control-progress"><div class="control-top mono"><span>TIME TRAVEL</span><span id="progressFraction">01/17</span></div><div class="progress-line"><i id="progressBar"></i></div></div><button id="nextButton" aria-label="Next era">→</button></div>
   <div class="foot-tip mono"><span>SCROLL TO TRAVEL <b>↓</b></span><span>DRAG TO LOOK <b>↔</b></span><span>17 CHAPTERS / 18 RECORDS</span></div>
 </main>
+<div id="previewHud" class="preview-hud" hidden role="status" aria-live="polite"><span class="preview-disc" aria-hidden="true">◉</span><div class="preview-meta"><b id="previewSong">SONG PREVIEW</b><small id="previewStatus">OFFICIAL 30-SECOND SAMPLE</small></div><button id="previewStop" aria-label="Stop song preview">■</button></div>
 <aside id="drawer" class="drawer" aria-label="Era record details" aria-hidden="true">
   <div class="drawer-top"><span class="mono">THE PHYSICAL ARCHIVE / RECORD INDEX</span><button id="drawerClose" aria-label="Close record details">✕</button></div>
   <div id="drawerContent" class="drawer-content"></div>
@@ -84,7 +86,7 @@
   <div id="catalogGrid" class="catalog-grid"></div>
   <footer class="catalog-footer mono">ARTWORK PROVIDED BY PUBLIC MUSIC-CATALOG PREVIEWS WHEN AVAILABLE. SOURCES: <a href="https://music.apple.com/us/artist/lucki/589757880" target="_blank" rel="noopener">APPLE MUSIC ↗</a> · <a href="https://musicbrainz.org/artist/9ccaca30-60aa-4890-ae6c-ab55225ee274" target="_blank" rel="noopener">MUSICBRAINZ ↗</a></footer>
 </section>
-<section id="info" class="info-overlay" role="dialog" aria-modal="true" aria-label="About the experience" hidden><div class="info-card"><button id="infoClose" class="big-close" aria-label="Close about">✕</button><span class="mono">SYSTEM / INFORMATION</span><h2>IT'S A MUSEUM.<br>NOT A WEBSITE.</h2><p>Journey through seventeen illustrated chapters of LUCKI's career. The visual installations change with every era, and every album sleeve is a record you can discover.</p><p><strong>SCROLL / ↑ ↓ / ← →</strong> — Move through time.<br><strong>DRAG OR MOVE MOUSE</strong> — Look around.<br><strong>CLICK ALBUM ART</strong> — Open the record.<br><strong>ALL ARTWORK</strong> — Browse everything.</p><p class="tiny">Unofficial, independent fan-made project. Covers are displayed as references to official releases and link to streaming pages. The animated environments are original interpretations, not historical photos. No unauthorized audio is hosted.</p><a href="https://music.apple.com/us/artist/lucki/589757880" target="_blank" rel="noopener" class="about-link">VISIT OFFICIAL ARTIST CATALOG ↗</a></div></section>
+<section id="info" class="info-overlay" role="dialog" aria-modal="true" aria-label="About the experience" hidden><div class="info-card"><button id="infoClose" class="big-close" aria-label="Close about">✕</button><span class="mono">SYSTEM / INFORMATION</span><h2>IT'S A MUSEUM.<br>NOT A WEBSITE.</h2><p>Journey through seventeen illustrated chapters of LUCKI's career. The visual installations change with every era, and every album sleeve is a record you can discover.</p><p><strong>SCROLL / ↑ ↓ / ← →</strong> — Move through time.<br><strong>DRAG OR MOVE MOUSE</strong> — Look around.<br><strong>CLICK ALBUM ART</strong> — Open the record.<br><strong>HOVER A SONG</strong> — Hear an official preview when available. Click to play if your browser blocks hover audio.<br><strong>ALL ARTWORK</strong> — Browse everything.</p><p class="tiny">Unofficial, independent fan-made project. Covers are displayed as references to official releases and link to streaming pages. The animated environments are original interpretations, not historical photos. Only publicly provided short previews are requested; no complete audio files are hosted.</p><a href="https://music.apple.com/us/artist/lucki/589757880" target="_blank" rel="noopener" class="about-link">VISIT OFFICIAL ARTIST CATALOG ↗</a></div></section>
 <div id="cursor" class="cursor" aria-hidden="true"></div>
 <div id="announcer" class="sr-only" role="status" aria-live="polite"></div>
 </body>

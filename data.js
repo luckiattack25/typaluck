@@ -41,6 +41,17 @@ export const RELEASES=[
  {id:'drgs-r-bad',title:'Dr*gs R Bad',year:2026,type:'album',era:'drgs-r-bad',notes:'A May 2026 project released through Lucki / EMPIRE.',appleId:1895198113,url:'https://music.apple.com/us/album/id1895198113',color:['#879b75','#242823']},
  {id:'last-laugh',title:'Last Laugh (archive tape)',year:2026,type:'album',era:'last-laugh',notes:'Twelve tracks, 24 minutes; officially released October 16, 2026 via Lucki / EMPIRE.',url:LAST_LAUGH,appleId:6821145872,color:['#ab3830','#230f11']}
 ];
+// The independently documented 2016 EP tracklist is displayed even if Apple's lookup has no entry.
+// Source: the original 2016 Son of Sam track listing (LiveMixtapes / LUCKI SoundCloud).
+export const SON_OF_SAM_TRACKS=[
+ {name:'Double Check',duration:'2:25'},
+ {name:'Jigga 98',duration:'2:56'},
+ {name:'Frze Up',duration:'2:02'},
+ {name:'Syrup Talk',duration:'3:19'},
+ {name:'His Only...',duration:'1:54'},
+ {name:'Nun2Me',duration:'4:05'},
+ {name:'Selful',duration:'2:08'}
+];
 export const TRACKS=[
  {name:'what it is',duration:'1:57'},
  {name:'all wock',duration:'2:23'},
