@@ -7,7 +7,7 @@ An independent, unofficial fan-made digital museum of LUCKI's releases from 2013
 - Eleven spatial gallery chapters (2013–2026), each with distinct Three.js installations and movable camera paths.
 - Actual floating, raycast-clickable 3D album sleeves. The public iTunes Search API is used to identify official album cover images and official Apple Music listing URLs; covers not retrievable are displayed as visibly generated archive placeholders rather than invented official art.
 - Last Laugh's twelve selectable 3D vinyl-style records with an accessible documented track list in the record drawer.
-- Mouse-look / click-and-drag camera influence; wheel, arrow keys, Page Up/Down, Home, End, and touch swipe travel across the 11 eras.
+- Mouse-look / click-and-drag camera influence; wheel, arrow keys, Page Up/Down, Home, End, and touch swipe travel across the 17 eras.
 - A responsive record-inspection drawer, comprehensive searchable album-art gallery, and locally saved favorite releases.
 - A distinct fall-back gallery if Three.js, WebGL, or public artwork APIs cannot load; reduced-motion support.
 
@@ -31,3 +31,6 @@ References:
 - https://music.apple.com/us/artist/lucki/589757880
 - https://music.apple.com/us/album/last-laugh-archive-tape/6821145872
 - https://musicbrainz.org/artist/9ccaca30-60aa-4890-ae6c-ab55225ee274
+
+## Illustrated eras and artwork
+The seventeen scene stops follow the Last Laugh illustration provided by the user, in order: Alternative Trap, Body High, X, Freewave, Son of Sam, Freewave 2, Watch My Back, Days B4 II, Freewave 3, Days B4 III, Almost There, WAKE UP LUCKI, FLAWLESS LIKE ME, s*x m*ney dr*gs, GEMINI!, Dr*gs R Bad, and the last unnamed Last Laugh figure. DaysB4Bad* remains an additional 2026 release in the discography without adding another illustrated era. Verified album identifiers from Apple Music are pinned to avoid false cover matches. Son of Sam uses an artwork URL returned by a verified streaming listing. If the album provider blocks an image, the gallery falls back to a clearly labeled stylized archival graphic.
