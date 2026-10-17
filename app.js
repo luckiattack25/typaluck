@@ -156,5 +156,28 @@ function initControls(){createRail();updateEraUI();$('#enterButton').addEventLis
  let sx=0,sy=0;const touchMoveStart=e=>{sx=e.touches[0].clientX;sy=e.touches[0].clientY};window.addEventListener('touchstart',touchMoveStart,{passive:true});window.addEventListener('touchend',e=>{if(!app.entered||app.drawer||app.catalog||app.info)return;const dx=e.changedTouches[0].clientX-sx,dy=e.changedTouches[0].clientY-sy;if(Math.abs(dx)>60||Math.abs(dy)>70){if(Math.abs(dx)>Math.abs(dy))goTo(app.index+(dx<0?1:-1));else goTo(app.index+(dy<0?1:-1))}},{passive:true});
  if(!touchScreen){window.addEventListener('pointermove',e=>{$('#cursor').style.left=e.clientX+'px';$('#cursor').style.top=e.clientY+'px'},{passive:true});document.addEventListener('pointerover',e=>{$('#cursor').classList.toggle('hover',Boolean(e.target.closest('button,a'))||e.target.tagName==='CANVAS')})}else $('#cursor').hidden=true;
 }
-async function init(){initControls();void loadCovers();const timeout=setTimeout(()=>{$('#preloader').hidden=true},2400);try{app.world=await initWorld()}catch(e){console.warn('3D startup failure',e)}finally{clearTimeout(timeout);$('#loadFill').style.width='100%';$('#loadText').textContent=app.world?'3D WORLDS READY':'LIGHTWEIGHT GALLERY READY';setTimeout(()=>{$('#preloader').hidden=true},350)}
-init();
+async function init(){
+  // Initialize navigation before optional network downloads or WebGL work.
+  initControls();
+  window.__luckiCoreReady=true;
+  void loadCovers().catch(err=>console.warn('Artwork lookup failed; using archive labels.',err));
+  const timeout=setTimeout(()=>{$('#preloader').hidden=true},2400);
+  try {
+    app.world=await initWorld();
+  } catch(err) {
+    console.warn('3D startup failure; gallery mode remains available.',err);
+    $('#sceneFallback').style.display='block';
+  } finally {
+    clearTimeout(timeout);
+    $('#loadFill').style.width='100%';
+    $('#loadText').textContent=app.world?'3D WORLDS READY':'GALLERY MODE READY';
+    setTimeout(()=>{$('#preloader').hidden=true},250);
+  }
+}
+init().catch(err=>{
+  console.error('Archive startup error:',err);
+  const loader=document.getElementById('preloader');
+  if(loader)loader.hidden=true;
+  const notice=document.getElementById('startupNotice');
+  if(notice)notice.hidden=false;
+});

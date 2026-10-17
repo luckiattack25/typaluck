@@ -12,6 +12,22 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=DM+Mono:wght@400;500&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <!-- INLINE_CSS -->
+<!-- Independent boot watchdog: even a missing browser feature cannot permanently cover the archive. -->
+<script>
+(function(){
+  function startWatchdog(){
+    setTimeout(function(){
+      var loader=document.getElementById('preloader');
+      if(loader)loader.hidden=true;
+      if(!window.__luckiCoreReady){
+        var notice=document.getElementById('startupNotice');
+        if(notice)notice.hidden=false;
+      }
+    },4500);
+  }
+  startWatchdog();
+})();
+</script>
 <!-- INLINE_JS -->
 </head>
 <body>
@@ -28,6 +44,7 @@
     <h1 class="entry-title">LUCKI<span>®</span></h1>
     <div class="entry-content"><div class="entry-outline">11<span>WORLDS</span></div><p>Every era leaves<br><em>a trace.</em></p></div>
     <p class="entry-pitch">Not another discography page.<br>Enter the music. Explore the art. Travel through time.</p>
+    <p id="startupNotice" class="startup-notice" hidden>The archive had trouble starting. Reload the page to try again. <a href="https://github.com/luckiattack25/typaluck/issues" target="_blank" rel="noopener noreferrer">Report an issue ↗</a></p>
     <button id="enterButton" class="enter-button">ENTER THE UNIVERSE <span>↗</span></button>
     <button id="skipButton" class="skip-button">SKIP CINEMATIC INTRO →</button>
   </div>
