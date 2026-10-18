@@ -18,13 +18,13 @@ Open any record in the 3D museum or album gallery to access its **Track Index**.
 
 For releases unavailable from Apple's lookup, the site never displays guessed tracks or substitutes audio from a different artist. `Son of Sam` uses its independently published seven-track listing, and `Last Laugh` has its established 12-track list as a fallback. If no official short preview is returned, that track is displayed as unavailable for on-page playback and visitors can open the streaming release link instead. No full songs are hosted.
 
-## SOUND RELICS — 3D song constellation
+## ERA WORLDS — 3D moving song artwork
 
-The 17 gallery chapters now use **procedural Three.js sound artifacts** in place of song-name boxes. Every song appears as a drifting three-dimensional object linked to its album cover through understated constellation paths. Vinyl objects, cassette fragments, light-drawn waveforms, glass memory shards with official cover fragments (when available), chrome orbital nodes and crystalline shapes vary by era and song.
+Each of the 17 eras has a different collection of original, artist-related interactive relics, with its own matching installation: from early Lucki Eck$ Chicago photocopies, `X` emblems and analog Freewave cassettes, through photographic Days B4 contact sheets, blue Almost There highway markers, WAKE UP LUCKI radio hardware, chrome FLAWLESS LIKE ME tokens, purple editorial SMD graphics, mirrored GEMINI panels, pink `10` archive labels, and Last Laugh's recovered year-by-year sleeves. Purple and pink elements are stylized graphic references rather than depictions of drugs.
 
-Titles remain hidden until discovery. Hovering reveals the song's title and triggers an official short preview where available; clicking pins a focused song view, holds preview playback, and offers an album detail link. Albums longer than eight songs can cycle through different artifacts. The *Last Laugh* vault shows twelve differently positioned vinyl-inspired objects simultaneously.
+Album covers remain the centerpiece. Songs are distributed **around both sides**, above, and in front of the album at different depths. They follow **continuous individually phased 3D orbital paths**; hovering slows the selected relic and reveals that song's title and short official preview when offered by Apple. Clicking focuses the relic and offers the album detail drawer. Different pages of tracks each have their own relics; the Last Laugh vault offers all 12 tracks at once.
 
-Objects are constructed lazily and released on era changes to avoid filling all seventeen environments with expensive geometry at once. Reduced-motion settings minimize animation. If a preview URL is unavailable, the object remains inspectable but no unlicensed audio is substituted.
+The website renders original sculptural objects, not boxes of song titles. All music streams are official short previews only and their absence is shown clearly. Keyboard users can browse the album's accessible song index through the release drawer. Relics are loaded as eras are explored; 256px background poster textures limit GPU memory, while the selected interactive relic uses a sharper texture. Reduced-motion settings keep the objects still.
 
 ## Sharp captions
 
