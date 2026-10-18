@@ -180,27 +180,11 @@ async function initWorld(){let THREE;try{THREE=await import('https://cdn.jsdeliv
  const groups=[],worldLabelTargets=[],songRacks=new Map(),albumCoverTextures=new Map();
  let hoveredWorldSong=null,focusedWorldSong=null,worldSongHoverTimer=null;
  const worldRow={classList:{add(){},remove(){}}};
- // Every era has its own sculptural visual language; song relics orbit the actual cover.
- const ERA_RELICS=[
-  {kind:'flyer',word:'ECK$',sub:'CHICAGO / 2013',accent:'#becdb1'},
-  {kind:'flame',word:'BODY HIGH',sub:'ARCHIVE / 2014',accent:'#ff8545'},
-  {kind:'cross',word:'X',sub:'2015 / LOST PRESS',accent:'#d9c1a2'},
-  {kind:'freewave',word:'FREEWAVE',sub:'FIRST WAVE / 2015',accent:'#dfd39b'},
-  {kind:'ghost',word:'SON OF SAM',sub:'2016 / GHOST FILE',accent:'#c1e9d2'},
-  {kind:'static',word:'FW // 02',sub:'2016 / DIGITAL TAPE',accent:'#8fa8ff'},
-  {kind:'night',word:'WATCH MY BACK',sub:'2017 / AFTER DARK',accent:'#e99cbe'},
-  {kind:'negative',word:'DAYS B4 II',sub:'2018 / CONTACT SHEET',accent:'#d6d2ce'},
-  {kind:'redwave',word:'FREEWAVE 3',sub:'2019 / RED FREQUENCY',accent:'#fc665c'},
-  {kind:'collage',word:'DAYS B4 III',sub:'2019 / ARCHIVE PRINT',accent:'#f29a6e'},
-  {kind:'highway',word:'ALMOST THERE',sub:'2020 / NIGHT DRIVE',accent:'#9bc8f0'},
-  {kind:'radio',word:'WAKE UP',sub:'F1LTHY / 2021',accent:'#e7bbc2'},
-  {kind:'chrome',word:'FLAWLESS',sub:'2022 / CHROME',accent:'#e5edf0'},
-  {kind:'purple',word:'SMD',sub:'2023 / PURPLE FILM',accent:'#f5b5e2'},
-  {kind:'mirror',word:'GEMINI!',sub:'2024 / TWO SIDES',accent:'#bbb3ff'},
-  {kind:'pink',word:'10',sub:'2026 / PINK ARCHIVE',accent:'#ff9bc6'},
-  {kind:'vault',word:'LAST LAUGH',sub:'2013—2026 / ALL ERAS',accent:'#f4a18c'}
+ const artifactPositions=[
+  [5.45,7.55,-4.6],[9.8,5.7,-5.8],[5.1,1.5,-3.4],[10.8,2.25,-5.8],
+  [7.9,8.3,-7.9],[7.65,.35,-5.15],[11.25,7.65,-8.8],[3.95,4.8,-6.4],
+  [6.25,4.8,-8.5],[10.9,-.5,-7.1],[3.45,8.7,-9.5],[9.55,8.85,-12]
  ];
- const ORBIT_RATE=touchScreen?.27:.35;
  function addParticles(group,col,num=80){const arr=new Float32Array(num*3);for(let i=0;i<num;i++){arr[i*3]=(Math.random()-.5)*22;arr[i*3+1]=Math.random()*15-3;arr[i*3+2]=(Math.random()-.5)*25;}const geom=new THREE.BufferGeometry();geom.setAttribute('position',new THREE.BufferAttribute(arr,3));const pts=new THREE.Points(geom,new THREE.PointsMaterial({color:col,size:touchScreen?.05:.064,transparent:true,opacity:.65,depthWrite:false,sizeAttenuation:true}));group.add(pts);animations.push({obj:pts,spin:.001,kind:'particle'})}
  function arch(group,z,col){const tmat=new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:.38,depthWrite:false});addBox(group,[.09,11,.09],[-9,2,z],tmat);addBox(group,[.09,11,.09],[9,2,z],tmat);addBox(group,[18,.09,.09],[0,7.5,z],tmat)}
  function giveArtworkMesh(group,r,pos,size,i){const holder=new THREE.Group();holder.position.set(...pos);holder.rotation.y=[.12,-.17,.2][i%3];group.add(holder);const [w,h]=size;const artMat=new THREE.MeshBasicMaterial({color:'#ffffff',side:THREE.DoubleSide});let c=createLabelCanvas(r.title,`${r.year} / ARCHIVE RECORD — SELECT TO VIEW`,ERAS[active].accent,512,512);const placeholder=new THREE.CanvasTexture(c);placeholder.colorSpace=THREE.SRGBColorSpace;artMat.map=placeholder;const art=new THREE.Mesh(new THREE.PlaneGeometry(w,h),artMat);art.position.z=.14;art.userData={releaseId:r.id,eraIndex:active};holder.add(art);interactive.push(art);frame(holder,w+.18,h+.18,.1);
@@ -213,106 +197,57 @@ async function initWorld(){let THREE;try{THREE=await import('https://cdn.jsdeliv
  textureTargets.set(r.id,art);
  const already=app.coverUrls.get(r.id);if(already)updateTexture(r.id,already);
  }
- // Each record becomes a physical, era-specific relic. No filler polygons or lined-up cards.
- function relicMaterial(color,metal=.33,rough=.37,alpha=1){return new THREE.MeshStandardMaterial({color,metalness:metal,roughness:rough,transparent:alpha<1,opacity:alpha,side:THREE.DoubleSide})}
- function relicInk(word,subtitle,kind,accent,j,dimension=512){
-  const canvas=document.createElement('canvas');canvas.width=dimension;canvas.height=dimension;
-  const c=canvas.getContext('2d');c.scale(dimension/512,dimension/512);const dark='#111012';
-  const palette={flame:['#470d08','#fb541d'],static:['#13102b','#3758b4'],purple:['#251029','#a74087'],night:['#1a0c18','#773847'],pink:['#302222','#ae3761'],highway:['#0c1c32','#246392'],redwave:['#30080c','#b63338'],mirror:['#1a103e','#5d4b96'],vault:['#300b11','#843d2e']};
-  const shades=palette[kind]||[dark,accent];const fill=c.createLinearGradient(0,0,512,512);fill.addColorStop(0,shades[0]);fill.addColorStop(1,shades[1]);c.fillStyle=fill;c.fillRect(0,0,512,512);
-  // Original typographic artwork: aged print, radio-frequency stripes, gallery evidence marks.
-  c.strokeStyle=accent;c.lineWidth=3;c.globalAlpha=.65;c.strokeRect(24,24,464,464);c.globalAlpha=1;
-  if(kind==='flame'||kind==='redwave'||kind==='freewave'||kind==='static'||kind==='purple'){
-   for(let k=0;k<10;k++){c.beginPath();c.strokeStyle=k%2?accent:'#ede5d9';c.globalAlpha=.08+(k%3)*.055;c.lineWidth=9-k*.55;for(let x=35;x<476;x+=11){const y=260+Math.sin(x*.023+k*.88+j)* (36+k*3)+Math.sin(x*.081+k)*15;x===35?c.moveTo(x,y):c.lineTo(x,y)}c.stroke()}c.globalAlpha=1;
-  }else if(kind==='flyer'||kind==='negative'||kind==='collage'||kind==='night'||kind==='vault'){
-   for(let k=0;k<8;k++){c.fillStyle=k%2?'#ebdfd4':accent;c.globalAlpha=.06+(k%3)*.04;c.fillRect(20+k*56,12,18,488)}c.globalAlpha=1;
-  }else if(kind==='mirror'||kind==='chrome'){
-   c.fillStyle='#ffffff';c.globalAlpha=.15;c.fillRect(251,26,10,462);c.fillRect(20,248,472,5);c.globalAlpha=1;
-  }else if(kind==='highway'){for(let k=0;k<8;k++){c.fillStyle=accent;c.globalAlpha=.18;c.fillRect(238,40+k*65,36,35)}c.globalAlpha=1}
-  else if(kind==='radio'){for(let k=0;k<12;k++){c.strokeStyle=accent;c.globalAlpha=.08+k*.025;c.beginPath();c.arc(260,252,22+k*19,0,Math.PI*2);c.stroke()}c.globalAlpha=1}
-  c.fillStyle=kind==='pink'?'#ffd5e6':'#f5f0e9';c.textAlign='center';c.textBaseline='middle';
-  let size=word.length>11?52:word.length>7?69:word.length>3?94:170;c.font=`900 ${size}px Impact, Arial Black, sans-serif`;
-  const parts=word.length>12?word.split(' '):[word];
-  if(parts.length>1){const half=Math.ceil(parts.length/2);c.fillText(parts.slice(0,half).join(' '),256,221,454);c.fillText(parts.slice(half).join(' '),256,305,454)}else c.fillText(word,256,258,448);
-  c.font='20px monospace';c.fillStyle=accent;c.fillText(subtitle,256,431,440);
-  c.font='16px monospace';c.fillText(String(j+1).padStart(2,'0')+' / RECOVERED',256,75);
-  const tex=new THREE.CanvasTexture(canvas);tex.colorSpace=THREE.SRGBColorSpace;return tex;
- }
+ // A collection of physical, fully three-dimensional artifacts instead of rectangular UI cards.
+ // Their asymmetrical depth, rotation, and motion are unique to each numbered record.
+ function artifactMaterial(color,metalness=.65,roughness=.26,opacity=1){return new THREE.MeshStandardMaterial({color,metalness,roughness,transparent:opacity<1,opacity,side:THREE.DoubleSide,emissive:new THREE.Color(color).multiplyScalar(.075),emissiveIntensity:.35})}
+ function makeIndexDisc(num,accent){const c=document.createElement('canvas');c.width=256;c.height=256;const ctx=c.getContext('2d');ctx.fillStyle='#101419';ctx.fillRect(0,0,256,256);ctx.strokeStyle=accent;ctx.lineWidth=5;ctx.beginPath();ctx.arc(128,128,115,0,Math.PI*2);ctx.stroke();ctx.fillStyle='#e9f2dc';ctx.font='bold 100px Impact, sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(String(num).padStart(2,'0'),128,126);ctx.font='15px monospace';ctx.fillStyle=accent;ctx.fillText('ARCHIVE AUDIO',128,204);return new THREE.CanvasTexture(c)}
  function createArtifact(stage,rack,track,index,j){
-  const era=ERAS[index],profile=ERA_RELICS[index],kind=profile.kind,accent=profile.accent;
-  const last=index===ERAS.length-1;
-  const golden=2.39996323,phase=(j+.35)*golden+index*.23;
-  const rx=last?5.7:5.1+(j%3)*.8,ry=last?3.6:2.75+(j%2)*.65;
-  const centerX=1.5,centerY=4.1;const angle=phase;
-  const initial=[centerX+Math.cos(angle)*rx,centerY+Math.sin(angle)*ry,-3+Math.sin(angle*1.43+j)*3.0];
-  const scale=(touchScreen?.69:.86)+(j%4)*.115;
-  const anchor=new THREE.Group();anchor.position.set(...initial);anchor.scale.setScalar(scale);rack.root.add(anchor);
+  const era=ERAS[index],accent=era.accent,color=new THREE.Color(accent),vault=index===ERAS.length-1;
+  const pos=artifactPositions[j],angle=index*.29+j*1.91,scale=.78+((j*7+index)%5)*.105;
+  const anchor=new THREE.Group();anchor.position.set(pos[0],pos[1],pos[2]);anchor.rotation.set(.09*Math.sin(angle),angle*.07,.15*Math.cos(angle));anchor.scale.setScalar(scale);rack.root.add(anchor);
   const model=new THREE.Group();anchor.add(model);
-  const accentMat=new THREE.MeshBasicMaterial({color:accent,transparent:true,opacity:.85,side:THREE.DoubleSide,depthWrite:false});
-  const ink=new THREE.MeshBasicMaterial({color:'#f0e8dd',side:THREE.DoubleSide});
-  const dark=relicMaterial('#151316',.45,.42);
-  const ring=(radius,tube=.025,m=accentMat)=>new THREE.Mesh(new THREE.TorusGeometry(radius,tube,8,50),m);
-  const slab=(w,h,d,m)=>new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);
-  const print=(w=1.32,h=1.22,depth=.08)=>{const card=slab(w+.11,h+.11,depth,relicMaterial('#171719',.25,.6));model.add(card);const plane=new THREE.Mesh(new THREE.PlaneGeometry(w,h),new THREE.MeshBasicMaterial({map:relicInk(profile.word,profile.sub,kind,accent,j),side:THREE.DoubleSide}));plane.position.z=depth/2+.014;model.add(plane);return plane};
-  const cover=(x=0,y=0,z=.14,w=.67,h=.67)=>{const photo=new THREE.Mesh(new THREE.PlaneGeometry(w,h),new THREE.MeshBasicMaterial({color:'#52545b',side:THREE.DoubleSide}));photo.position.set(x,y,z);model.add(photo);rack.photos.push(photo);return photo};
-  const chrome=relicMaterial('#c2c5ca',.94,.12);
-  if(kind==='flyer'){ // Lucki Eck$: Chicago underground photocopies and flyer fragments.
-   model.add(slab(1.42,1.68,.08,relicMaterial('#a2a69b',.05,.95)));print(1.24,1.55);cover(.27,-.27,.13,.55,.54);
-   const corner=slab(.42,.13,.06,chrome);corner.position.set(-.42,.82,.09);model.add(corner);
-  }else if(kind==='flame'){ // Body High's vivid burnt-orange sleeve, reflected as suspended screenprints.
-   print(1.53,1.44);cover(.06,-.17,.14,.82,.78);
-   for(let k=0;k<3;k++){const swirl=ring(.7+k*.17,.035,k===1?ink:accentMat);swirl.scale.y=.62;swirl.rotation.z=.48+k*.34;model.add(swirl)}
-  }else if(kind==='cross'){ // X: die-cut X emblems and physical archive labels.
-   for(const z of [-1,1]){const bar=slab(.23,1.85,.15,z===1?chrome:dark);bar.rotation.z=z*.78;model.add(bar)}
-   const medallion=slab(.5,.3,.18,relicMaterial(accent,.6,.25));medallion.position.z=.12;model.add(medallion);
-  }else if(kind==='freewave'||kind==='redwave'||kind==='static'){ // The three Freewave lineages: ink ribbons, physical tapes and broadcast contours.
-   const pts=[];for(let k=0;k<45;k++){const x=(k/44-.5)*2.15;pts.push(new THREE.Vector3(x,Math.sin(x*7+index+j)*.32,Math.cos(x*5+index)*.18))}
-   model.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts),88,.046,7,false),accentMat));
-   const tape=slab(1.24,.68,.18,dark);tape.position.y=-.38;model.add(tape);
-   for(const x of [-.34,.34]){const reel=ring(.19,.039,accentMat);reel.position.set(x,-.37,.12);model.add(reel)}
-   const tag=new THREE.Mesh(new THREE.PlaneGeometry(.64,.37),new THREE.MeshBasicMaterial({map:relicInk(profile.word,profile.sub,kind,accent,j),side:THREE.DoubleSide}));tag.position.set(0,.45,.09);model.add(tag);
-  }else if(kind==='ghost'){ // Son of Sam: a translucent silhouette and archival photo traces.
-   const head=new THREE.Mesh(new THREE.SphereGeometry(.4,24,20),relicMaterial('#e2f5df',.1,.6,.56));head.position.y=.48;model.add(head);
-   const body=new THREE.Mesh(new THREE.CylinderGeometry(.33,.75,1.2,30),relicMaterial('#e2f5df',.1,.6,.45));body.position.y=-.35;model.add(body);cover(0,-.22,.56,.58,.58);
-  }else if(kind==='night'){ // Watch My Back: a glossy late-night contact print in a streetlight frame.
-   print(1.48,1.34);cover(-.04,.0,.14,1.01,.92);
-   const headlight=new THREE.Mesh(new THREE.SphereGeometry(.13,14,12),new THREE.MeshBasicMaterial({color:'#f8bb8e'}));headlight.position.set(.81,-.52,.2);model.add(headlight);
-  }else if(kind==='negative'||kind==='collage'){ // Days B4: actual photographic film and distressed contact sheets.
-   const film=slab(1.58,1.24,.1,relicMaterial('#242123',.36,.55));model.add(film);cover(0,0,.07,1.05,.94);
-   for(const side of [-1,1])for(let k=0;k<4;k++){const perf=slab(.09,.13,.012,ink);perf.position.set(side*.7,-.41+k*.28,.08);model.add(perf)}
-   if(kind==='collage'){const strip=slab(1.9,.2,.06,relicMaterial('#d9a17e',.1,.9));strip.rotation.z=-.27;strip.position.set(0,.6,.11);model.add(strip)}
-  }else if(kind==='highway'){ // Almost There: blue road reflector / 2020 nighttime highway memory.
-   const sign=slab(1.36,1.02,.17,relicMaterial('#163a60',.32,.43));model.add(sign);cover(0,-.21,.09,.9,.43);
-   for(let k=0;k<3;k++){const dash=slab(.14,.32,.03,ink);dash.position.set(-.48+k*.48,.34,.14);model.add(dash)}
-  }else if(kind==='radio'){ // WAKE UP LUCKI x F1lthy: a tuning dial and hardware knobs.
-   const radio=slab(1.59,1.02,.34,relicMaterial('#382b32',.58,.3));model.add(radio);
-   const dial=new THREE.Mesh(new THREE.CylinderGeometry(.39,.39,.11,40),chrome);dial.rotation.x=Math.PI/2;dial.position.set(-.29,.05,.24);model.add(dial);
-   for(const x of [.38,.64]){const knob=new THREE.Mesh(new THREE.CylinderGeometry(.13,.13,.14,24),dark);knob.rotation.x=Math.PI/2;knob.position.set(x,.19,.25);model.add(knob)}
-   const label=slab(.49,.1,.025,accentMat);label.position.set(.48,-.23,.24);model.add(label);
-  }else if(kind==='chrome'){ // FLAWLESS LIKE ME: polished hanging medallions, linked like jewelry.
-   const piece=new THREE.Mesh(new THREE.CylinderGeometry(.76,.76,.16,48),chrome);piece.rotation.x=Math.PI/2;model.add(piece);
-   const crest=new THREE.Mesh(new THREE.CircleGeometry(.58,48),new THREE.MeshBasicMaterial({map:relicInk('FLM','2022 / SILVER',kind,accent,j),side:THREE.DoubleSide}));crest.position.z=.1;model.add(crest);
-   const loop=ring(.27,.08,chrome);loop.position.y=.93;model.add(loop);
-  }else if(kind==='purple'){ // SMD: purple fluid-glass and neon-pink 10 typography; no medication imagery.
-   const droplet=new THREE.Mesh(new THREE.SphereGeometry(.62,28,24),relicMaterial('#863775',.63,.06,.82));droplet.scale.set(.82,1.32,.67);model.add(droplet);
-   const tile=new THREE.Mesh(new THREE.PlaneGeometry(.89,.56),new THREE.MeshBasicMaterial({map:relicInk(j%2?'SMD':'10','2023 / PURPLE',kind,accent,j),side:THREE.DoubleSide}));tile.position.z=.46;model.add(tile);
-   const halo=ring(.95,.023);halo.rotation.x=.77;model.add(halo);
-  }else if(kind==='mirror'){ // GEMINI!: two polished panels form one shifting double image.
-   for(const side of [-1,1]){const mirror=slab(.58,1.45,.12,side===1?chrome:relicMaterial('#5e5279',.81,.12));mirror.position.x=side*.36;mirror.rotation.y=side*.4;model.add(mirror)}
-   const gem=new THREE.Mesh(new THREE.PlaneGeometry(.51,.74),new THREE.MeshBasicMaterial({map:relicInk('II','GEMINI / 2024',kind,accent,j),side:THREE.DoubleSide}));gem.position.z=.22;model.add(gem);
-  }else if(kind==='pink'){ // 2026: pink 10s as archival typography, with green industrial artwork accents.
-   const ticket=slab(1.48,1.12,.13,relicMaterial('#456154',.3,.55));model.add(ticket);
-   const pinkTag=new THREE.Mesh(new THREE.PlaneGeometry(1.23,.97),new THREE.MeshBasicMaterial({map:relicInk('10','2026 / ARCHIVE',kind,accent,j),side:THREE.DoubleSide}));pinkTag.position.z=.081;model.add(pinkTag);
-   const clip=slab(.37,.16,.09,chrome);clip.position.set(.41,.61,.1);model.add(clip);
-  }else{ // Last Laugh: physical memory sleeves from earlier periods meet in the vault.
-   const sleeve=slab(1.43,1.57,.12,relicMaterial('#342328',.47,.55));model.add(sleeve);cover(0,.06,.072,1.16,1.12);
-   const seal=new THREE.Mesh(new THREE.CircleGeometry(.32,36),new THREE.MeshBasicMaterial({map:relicInk(String(2013+j),'ARCHIVE / LUCKI',kind,accent,j),side:THREE.DoubleSide}));seal.position.set(.43,-.58,.1);model.add(seal);
+  const body=artifactMaterial('#222a2c',.8,.18);
+  const accentMat=new THREE.MeshBasicMaterial({color,transparent:true,opacity:.78,side:THREE.DoubleSide,depthWrite:false});
+  const pale=new THREE.MeshBasicMaterial({color:'#e4e9e0',transparent:true,opacity:.65,side:THREE.DoubleSide,depthWrite:false});
+  const type=vault?0:(j+index)%6;
+  const ring=(radius,tube=.026,matl=accentMat)=>new THREE.Mesh(new THREE.TorusGeometry(radius,tube,8,52),matl);
+  if(type===0){ // A physical vinyl disc, complete with colored center label and orbiting guide arcs.
+   const disc=new THREE.Mesh(new THREE.CylinderGeometry(.64,.64,.12,48),body);disc.rotation.x=Math.PI/2;model.add(disc);
+   for(let k=0;k<4;k++){const groove=ring(.30+k*.09,.007,new THREE.MeshBasicMaterial({color:'#aeb8b5',transparent:true,opacity:.24,side:THREE.DoubleSide}));groove.position.z=.075;model.add(groove)}
+   const label=new THREE.Mesh(new THREE.CircleGeometry(.195,44),accentMat);label.position.z=.081;model.add(label);
+   const num=new THREE.Mesh(new THREE.CircleGeometry(.18,44),new THREE.MeshBasicMaterial({map:makeIndexDisc(track.number||j+1,accent),transparent:true,side:THREE.DoubleSide}));num.position.z=.086;model.add(num);
+   const orbit=ring(.93,.015,pale);orbit.rotation.set(.55,0,.4);model.add(orbit);
+  }else if(type===1){ // Suspended prismatic glass meteor.
+   const prism=new THREE.Mesh(new THREE.IcosahedronGeometry(.64,0),artifactMaterial(color.clone().lerp(new THREE.Color('#d6efff'),.55),.38,.1,.76));model.add(prism);
+   const wire=new THREE.LineSegments(new THREE.EdgesGeometry(prism.geometry),new THREE.LineBasicMaterial({color,transparent:true,opacity:.85}));wire.scale.setScalar(1.075);model.add(wire);
+   for(let k=0;k<3;k++){const chip=new THREE.Mesh(new THREE.TetrahedronGeometry(.17),accentMat);chip.position.set(Math.cos(k*2.09)*1.0,Math.sin(k*2.09)*.8,(k-1)*.22);chip.rotation.z=k*.95;model.add(chip)}
+  }else if(type===2){ // A waveform materialized as metal bars and a luminous audio ribbon.
+   const pts=[];for(let k=0;k<44;k++){const x=(k/43-.5)*1.65;pts.push(new THREE.Vector3(x,Math.sin(k*.48+index)*.22+Math.sin(k*.91)*.11,Math.sin(k*.33)*.14))}
+   const curve=new THREE.CatmullRomCurve3(pts);model.add(new THREE.Mesh(new THREE.TubeGeometry(curve,90,.026,5,false),accentMat));
+   for(let k=0;k<12;k++){const h=.15+Math.abs(Math.sin(k*2.25+index*.9))*.8;const bar=new THREE.Mesh(new THREE.BoxGeometry(.042,h,.065),k%3?pale:accentMat);bar.position.set((k-5.5)*.137,0,-.18);model.add(bar)}
+   const arc=ring(.86,.016,accentMat);arc.scale.y=.73;arc.rotation.y=.25;model.add(arc);
+  }else if(type===3){ // An exposed analog cassette fragment.
+   const cassette=new THREE.Mesh(new THREE.BoxGeometry(1.55,.91,.19),artifactMaterial('#343838',.74,.39));model.add(cassette);
+   const edges=new THREE.LineSegments(new THREE.EdgesGeometry(cassette.geometry),new THREE.LineBasicMaterial({color,transparent:true,opacity:.84}));model.add(edges);
+   for(const x of [-.43,.43]){const reel=ring(.25,.055,accentMat);reel.position.set(x,.04,.12);model.add(reel);const hole=new THREE.Mesh(new THREE.CircleGeometry(.09,24),body);hole.position.set(x,.04,.13);model.add(hole)}
+   const window=new THREE.Mesh(new THREE.PlaneGeometry(1.25,.18),new THREE.MeshBasicMaterial({color:'#c1ceca',transparent:true,opacity:.22}));window.position.set(0,-.32,.12);model.add(window);
+  }else if(type===4){ // Fractured chrome constellation: rotating elliptical orbital paths.
+   const node=new THREE.Mesh(new THREE.OctahedronGeometry(.42,1),artifactMaterial('#939f9f',.93,.12));model.add(node);
+   for(let k=0;k<3;k++){const orbit=ring(.68+k*.14,.017,k===1?pale:accentMat);orbit.rotation.set(.28+k*.53,.66+k*.83,k*.24);model.add(orbit)}
+   for(let k=0;k<4;k++){const dot=new THREE.Mesh(new THREE.SphereGeometry(.085,10,8),accentMat);dot.position.set(Math.cos(k*1.6)*1.01,Math.sin(k*1.6)*.72,(k-1.5)*.24);model.add(dot)}
+  }else{ // Glass photographic memory shards, suspended around a reflective core.
+   const pane=new THREE.Mesh(new THREE.PlaneGeometry(.96,1.3),artifactMaterial(color.clone().lerp(new THREE.Color('#dce0dc'),.45),.27,.13,.65));pane.rotation.y=-.3;model.add(pane);
+   const lines=new THREE.LineSegments(new THREE.EdgesGeometry(pane.geometry),new THREE.LineBasicMaterial({color,transparent:true,opacity:.87}));lines.rotation.y=-.3;model.add(lines);
+   const shard=new THREE.Mesh(new THREE.TetrahedronGeometry(.45),artifactMaterial('#a9b2b1',.93,.2));shard.position.set(.35,.09,.43);model.add(shard);
+   const halo=ring(.95,.013,accentMat);halo.rotation.x=.6;model.add(halo);
+   const photo=new THREE.Mesh(new THREE.PlaneGeometry(.82,1.02),new THREE.MeshBasicMaterial({color:'#707f7b',side:THREE.DoubleSide,transparent:true,opacity:.82}));photo.position.set(0,0,.025);photo.rotation.y=-.3;model.add(photo);rack.photos.push(photo);
   }
-  // Real hover target travels with the relic. Titles exist in the hover/focus UI, not as wall text.
-  const hit=new THREE.Mesh(new THREE.SphereGeometry(1.13,16,12),new THREE.MeshBasicMaterial({transparent:true,opacity:0,depthWrite:false}));
-  hit.userData={trackSong:track,releaseId:rack.releaseId,trackNumber:track.number||j+1,eraIndex:index,anchor,model,artifactType:kind};anchor.add(hit);interactive.push(hit);rack.objects.push(hit);
-  const speed=ORBIT_RATE*(.7+(j%4)*.12)*(j%3===0?-1:1);
-  rack.motions.push({obj:anchor,model,hit,scale,phase,rx,ry,cz:-3+Math.sin(j*2.27+index)*2.3,centerX,centerY,velocity:speed,hoverMix:0,kind:'orbit',j});
+  const size=type===2?1.3:1.14;
+  const hit=new THREE.Mesh(new THREE.SphereGeometry(size,16,12),new THREE.MeshBasicMaterial({transparent:true,opacity:0,depthWrite:false,side:THREE.DoubleSide}));hit.userData={trackSong:track,releaseId:rack.releaseId,trackNumber:track.number||j+1,eraIndex:index,anchor,model,artifactType:type};anchor.add(hit);interactive.push(hit);rack.objects.push(hit);
+  // A faint line from the record wall to each artifact makes the gallery feel like a constellation.
+  const curve=new THREE.QuadraticBezierCurve3(new THREE.Vector3(2.7,3.1,-1.7),new THREE.Vector3((pos[0]+2.7)/2, pos[1]+.85,pos[2]-1.7),new THREE.Vector3(pos[0],pos[1],pos[2]));
+  const connection=new THREE.Line(new THREE.BufferGeometry().setFromPoints(curve.getPoints(32)),new THREE.LineBasicMaterial({color,transparent:true,opacity:.12,depthWrite:false}));rack.root.add(connection);
+  rack.motions.push({obj:anchor,kind:'artifact',base:new THREE.Vector3(...pos),phase:angle,scale,model,hit,delay:Math.random()*6,velocity:.36+(j%5)*.075});
  }
  function disposeRack(rack){
   for(const hit of rack.objects){const at=interactive.indexOf(hit);if(at!==-1)interactive.splice(at,1)}
@@ -329,8 +264,8 @@ async function initWorld(){let THREE;try{THREE=await import('https://cdn.jsdeliv
   const pages=Math.max(1,Math.ceil(rows.length/perPage));rack.page=Math.min(rack.page,pages-1);
   const shown=rows.slice(rack.page*perPage,(rack.page+1)*perPage);
   if(!shown.length){
-   // A small signal marks an archive still resolving its officially listed songs.
-   const pulse=new THREE.Mesh(new THREE.TorusGeometry(1.1,.016,8,70),new THREE.MeshBasicMaterial({color:ERAS[index].accent,transparent:true,opacity:.26}));pulse.position.set(1.3,4.1,-4);pulse.rotation.x=.9;rack.root.add(pulse);
+   // A subtle scanning signal replaces the dead text block while track metadata is loading.
+   const pulse=new THREE.Mesh(new THREE.TorusGeometry(1.1,.016,8,70),new THREE.MeshBasicMaterial({color:ERAS[index].accent,transparent:true,opacity:.26}));pulse.position.set(7.6,3.3,-5);pulse.rotation.x=.9;rack.root.add(pulse);
   }
   shown.forEach((track,j)=>createArtifact(rack.root,rack,track,index,j));
   const tex=albumCoverTextures.get(rack.releaseId);
@@ -359,7 +294,7 @@ async function initWorld(){let THREE;try{THREE=await import('https://cdn.jsdeliv
  function clearArtifactFocus(){focusedWorldSong=null;const panel=$('#songFocus');if(panel)panel.hidden=true;if(previewPinned)stopPreview()}
  function focusArtifact(hit){if(focusedWorldSong===hit){clearArtifactFocus();return}
   focusedWorldSong=hit;const data=hit.userData,t=data.trackSong;
-  $('#songFocusIndex').textContent=`${ERA_RELICS[app.index].word} / RELIC ${String(data.trackNumber).padStart(2,'0')}`;
+  $('#songFocusIndex').textContent=`ARCHIVE FRAGMENT / ${String(data.trackNumber).padStart(2,'0')}`;
   $('#songFocusTitle').textContent=t.name;
   $('#songFocusHint').textContent=t.previewUrl?'HOVER OR CLICK TO PREVIEW • OFFICIAL SAMPLE':'AUDIO PREVIEW UNAVAILABLE • OPEN RELEASE';
   $('#songFocus').hidden=false;
@@ -371,7 +306,7 @@ async function initWorld(){let THREE;try{THREE=await import('https://cdn.jsdeliv
   if(!previewPinned&&(activePreviewTrack||playingRow===worldRow))stopPreview();
  }
  function showArtifactTooltip(mesh,e){const tip=$('#artifactTooltip'),t=mesh.userData.trackSong;
-  $('#artifactTooltipIndex').textContent=`${ERA_RELICS[app.index].word} · RELIC ${String(mesh.userData.trackNumber).padStart(2,'0')}`;
+  $('#artifactTooltipIndex').textContent=`MEMORY ${String(mesh.userData.trackNumber).padStart(2,'0')}`;
   $('#artifactTooltipTitle').textContent=t.name;
   $('#artifactTooltipMeta').textContent=t.previewUrl?'◉ HOVER TO LISTEN · CLICK TO HOLD':'◌ PREVIEW UNAVAILABLE · CLICK TO INSPECT';
   tip.hidden=false;tip.style.left=Math.min(innerWidth-260,Math.max(14,e.clientX+20))+'px';
@@ -385,68 +320,36 @@ async function initWorld(){let THREE;try{THREE=await import('https://cdn.jsdeliv
   }
   if(mesh&&e)showArtifactTooltip(mesh,e);
  }
- function stageEnvironment(group,i,color){
-  // Every era is an installation about that release, not generic floating geometry.
-  const glow=new THREE.MeshBasicMaterial({color,transparent:true,opacity:.29,side:THREE.DoubleSide,depthWrite:false});
-  const flat=new THREE.MeshStandardMaterial({color:'#232329',roughness:.51,metalness:.59});
-  const glyph=(text,x,y,z,w=4,h=1.65)=>{const t=worldText(group,text,`${ERAS[i].start} / ${ERA_RELICS[i].sub}`,color,[x,y,z],[w,h]);t.rotation.y=-.09;return t};
-  const bar=(w,h,d,x,y,z,m=glow)=>addBox(group,[w,h,d],[x,y,z],m);
-  const circle=(radius,x,y,z)=>{const v=new THREE.Mesh(new THREE.TorusGeometry(radius,.048,8,72),glow);v.position.set(x,y,z);group.add(v);animations.push({obj:v,kind:'slowspin',offset:i});return v};
-  switch(i){
-   case 0: // Alternative Trap: Chicago's early underground photocopy walls.
-    glyph('ECK$ // 2013',-4.4,7.55,-11,6.6,1.8);
-    for(let k=0;k<7;k++){const print=new THREE.Mesh(new THREE.PlaneGeometry(1.15,1.7),new THREE.MeshBasicMaterial({map:relicInk('CHICAGO','LUCKI ECK$ / 2013','flyer',color,k,256),side:THREE.DoubleSide}));print.position.set(-8+k*2.2,2.1+(k%3)*1.3,-11.8-(k%2));print.rotation.z=(k%2?-.1:.13);group.add(print)}break;
-   case 1: // Body High: molten reflections taken from the burning-orange cover palette.
-    glyph('BODY HIGH',-4.5,7.7,-12,7,2.2);
-    for(let k=0;k<6;k++){const r=circle(1.1+k*.42,1.1,3.2,-10-k*.39);r.scale.y=.55;r.rotation.z=k*.36}break;
-   case 2: // X: several enormous die-cut X forms in a dark printing room.
-    glyph('X / 2015',-3.8,7.7,-12,6,2.2);
-    for(let k=0;k<3;k++)for(const dir of [-1,1]){const x=bar(.28,5-k*.6,.14,-3+k*3.2,2.2,-10-k,flat);x.rotation.z=dir*.79}break;
-   case 3: // Freewave: overlapping physical tape spools and abstract wave ribbons.
-    glyph('FREEWAVE',-4.6,7.6,-12,7.1,2.1);
-    for(let k=0;k<5;k++){const r=circle(1.5+k*.35,-1+k*.75,3,-11.5-k*.6);r.scale.y=.4;r.rotation.x=.25}break;
-   case 4: // Son of Sam: pale silhouettes in a quiet 2016 archive.
-    glyph('SON OF SAM',-3.8,7.7,-12,6.7,2);
-    for(let k=0;k<5;k++){const ghost=new THREE.Mesh(new THREE.CylinderGeometry(.5,.8,2.2,30),new THREE.MeshBasicMaterial({color:'#b4d6c4',transparent:true,opacity:.11,side:THREE.DoubleSide}));ghost.position.set(-6+k*3.2,1.6+(k%2)*.6,-11.5);group.add(ghost)}break;
-   case 5: // Freewave 2: blue digital tapes and wave signal portals.
-    glyph('FREEWAVE // 02',-4.7,7.6,-13,7.8,1.95);
-    for(let k=0;k<5;k++){const deck=bar(2,.59,.28,-6+k*2.5,3.8+(k%2)*1.2,-11-(k%3),flat);deck.rotation.z=(k%2?-.14:.09);const r=circle(.25,deck.position.x,deck.position.y,-10.78-(k%3));r.scale.x=2}break;
-   case 6: // Watch My Back: silhouetted city blocks and reflected streetlamps.
-    glyph('WATCH MY BACK',-4.4,8,-13,7.5,1.95);
-    for(let k=0;k<11;k++){const h=2+(k*3%7);const city=bar(.8,h,1,-8+k*1.7,-2+h/2,-13-(k%3),flat);if(k%3===0)bar(.12,.1,.03,city.position.x,1.3,-12.45-(k%3),glow)}break;
-   case 7: // Days B4 II: archival black-and-white film contact sheets.
-    glyph('DAYS B4 II',-4.9,7.8,-12,7.3,2);
-    for(let k=0;k<6;k++){const film=new THREE.Mesh(new THREE.PlaneGeometry(1.48,1.8),new THREE.MeshBasicMaterial({map:relicInk('DAYS B4','2018 / CONTACT', 'negative',color,k,256),side:THREE.DoubleSide}));film.position.set(-7+k*2.5,3.1+(k%2),-13);group.add(film)}break;
-   case 8: // Freewave 3: distinct 2019 red signal / analog broadcast.
-    glyph('FREEWAVE 3',-4.4,7.8,-12,7,2);
-    for(let k=0;k<6;k++){const ring=circle(1.3+k*.34,0,2.7,-13-k*.4);ring.rotation.y=.37;k%2?ring.scale.y=.62:ring.scale.x=.6}break;
-   case 9: // Days B4 III: torn printed layers that reference its collage era.
-    glyph('DAYS B4 III',-4.7,7.8,-12,7.4,2.1);
-    for(let k=0;k<7;k++){const poster=new THREE.Mesh(new THREE.PlaneGeometry(1.4+(k%3)*.4,1.25+(k%2)*.7),new THREE.MeshBasicMaterial({map:relicInk('DAYS B4','RECORD 2019','collage',color,k,256),side:THREE.DoubleSide}));poster.position.set(-7.8+k*2.2,2.4+(k%3)*.65,-12.3-(k%2));poster.rotation.z=(k%2?-.17:.12);group.add(poster)}break;
-   case 10: // Almost There: a blue night-drive vanishing point.
-    glyph('ALMOST THERE',-4.5,7.9,-13,7.1,2);
-    for(let k=0;k<13;k++){const z=6-k*1.6;bar(.11,.025,.68,-2.4,-2.8,z);bar(.11,.025,.68,2.4,-2.8,z);if(k%2===0)bar(.13,.04,.85,0,-2.79,z,glow)}break;
-   case 11: // WAKE UP LUCKI: radio signal rings for the F1lthy collaboration.
-    glyph('WAKE UP LUCKI',-4.4,7.8,-12,7.4,2);
-    for(let k=0;k<5;k++){const r=circle(.7+k*.6,1,3,-12-k*.3);r.rotation.x=.45+k*.13}break;
-   case 12: // FLAWLESS LIKE ME: reflective chrome emblems and editorial plinths.
-    glyph('FLAWLESS LIKE ME',-4.9,7.75,-13,8.2,2);
-    for(let k=0;k<6;k++){const chrome=new THREE.MeshStandardMaterial({color:'#b5b9b7',metalness:.96,roughness:.1});const p=bar(1.1,2.8+(k%3)*.7,.35,-7.4+k*2.55,.6+(k%2)*1.1,-13.5,chrome);p.rotation.y=k*.16}break;
-   case 13: // SMD: purple fluid-like light, fashion prints and pink '10' typography.
-    glyph('SMD / 2023',-4.2,7.8,-12,7,2);
-    for(let k=0;k<5;k++){const drop=new THREE.Mesh(new THREE.SphereGeometry(.8+k*.1,22,20),relicMaterial('#7e3b83',.45,.11,.43));drop.scale.set(.7,2.1,.6);drop.position.set(-6+k*3,2.8,-12-(k%2));group.add(drop)}break;
-   case 14: // GEMINI!: symmetrical twin mirrors rather than decorative clutter.
-    glyph('GEMINI! / II',-4.4,7.8,-12,7,2);
-    for(let side of [-1,1])for(let k=0;k<4;k++){const v=bar(.22,4.8+k*.48,1.1,side*(3.2+k*1.6),.7,-11.5-k*.9,flat);v.rotation.y=side*.24}break;
-   case 15: // Dr*gs R Bad: green/black print, pink 10 typography, no medication props.
-    glyph('DR*GS R BAD',-4.6,7.75,-12,7.4,2);
-    for(let k=0;k<6;k++){const token=new THREE.Mesh(new THREE.PlaneGeometry(1.1,1.15),new THREE.MeshBasicMaterial({map:relicInk('10','2026 / PINK ARCHIVE','pink','#ff9bc6',k,256),side:THREE.DoubleSide}));token.position.set(-7+k*2.7,3+(k%2)*1.1,-13);group.add(token)}break;
-   case 16: // Last Laugh: a final vault of years, original tapes and converging records.
-    glyph('LAST LAUGH',-4.4,7.9,-13,7.4,2.2);
-    for(let k=0;k<10;k++){const slide=new THREE.Mesh(new THREE.PlaneGeometry(1.22,1.4),new THREE.MeshBasicMaterial({map:relicInk(String(2013+k),'RECOVERED / VAULT','vault',color,k,256),side:THREE.DoubleSide}));slide.position.set(-8.1+(k%5)*3.8,1.7+Math.floor(k/5)*3.6,-12.8);group.add(slide)}break;
-  }
-  const pl=new THREE.PointLight(color,9,27,2);pl.position.set(3,5,-5);group.add(pl);
-  addParticles(group,color,touchScreen?14:25);
+ function stageEnvironment(group,i,color){const p=()=>Math.random();const accent=new THREE.Color(color);arch(group,4,color);arch(group,-7,color);
+ // Each decade-chapter owns an identifiable physical installation, not a CSS color swap.
+ for(let k=0;k<7;k++){let x=(k-3)*3.5;addBox(group,[.08,11,.1],[x,1.7,-9],new THREE.MeshBasicMaterial({color:accent,transparent:true,opacity:.11}));}
+ switch(ERAS[i].world){
+ case 0: // Suspended analogue prints / scanning rails
+  for(let j=0;j<12;j++){let x=(p()-.5)*15,y=p()*9-1,z=p()*-11;const sh=addPlane(group,[.55+p()*2,.9+p()*1.5],[x,y,z],'#b9cbd3');sh.rotation.set(p()*.3,p()*.6,p()*.5);animations.push({obj:sh,kind:'shard',offset:j})}break;
+ case 1: // Cassette window / waveline
+  for(let j=0;j<7;j++){const a=addBox(group,[2,.52,1],[Math.sin(j*1.8)*7,3+j*.48,-7+j*.55],mat('#5c6060',.35,.8));a.rotation.set(.3,j*.35,.3);animations.push({obj:a,kind:'slowspin',offset:j})}break;
+ case 2: // Rain-drenched city skyline
+  for(let j=0;j<24;j++){const h=2+p()*10;const b=addBox(group,[.7+p()*1.3,h,1.2+p()*2],[(p()-.5)*19,-3+h/2,-9-p()*5],mat('#18212a',.55,.25));for(let m=0;m<2;m++)addBox(group,[.1,.12,.01],[b.position.x+(p()-.5),-2+p()*Math.min(7,h-1),b.position.z+1],new THREE.MeshBasicMaterial({color:p()>.5?'#a64f5e':'#eaab7c',transparent:true,opacity:.62}));}break;
+ case 3: // Collage: disruptive torn archive pieces
+  for(let j=0;j<17;j++){const t=addPlane(group,[.7+p()*2.8,.4+p()*1.8],[(p()-.5)*17,(p()*10)-1,-6-p()*11],j%2?'#d8beb3':'#69392e');t.material.opacity=.26;t.rotation.set(.16*j,.28*j,p()*1.4);animations.push({obj:t,kind:'shard',offset:j*.4})}break;
+ case 4: // A vanishing highway through blue space
+  for(let j=0;j<15;j++){const zz=3-j*1.3;addBox(group,[.09,.02,.7],[-2.3,-2.88,zz],new THREE.MeshBasicMaterial({color:'#a6c6ef',transparent:true,opacity:.65}));addBox(group,[.09,.02,.7],[2.3,-2.88,zz],new THREE.MeshBasicMaterial({color:'#a6c6ef',transparent:true,opacity:.65}));}for(const x of [-8,8])for(let z=-14;z<7;z+=5){addBox(group,[.16,6,.16],[x,.2,z],mat('#283d50'));}break;
+ case 5: // F1lthy / high-energy signal torii
+  for(let j=0;j<5;j++){const ring=new THREE.Mesh(new THREE.TorusGeometry(3+j*.6,.07,8,80),new THREE.MeshBasicMaterial({color,transparent:true,opacity:.47,side:THREE.DoubleSide}));ring.position.set(2.5,3,-8-j*1.1);ring.rotation.x=Math.PI*.18+j*.2;group.add(ring);animations.push({obj:ring,kind:'spin',offset:j})}break;
+ case 6: // Chrome gallery pedestal
+  for(let j=0;j<8;j++){const pedestal=addBox(group,[.8,1+j*.28,.8],[(j-3.5)*1.65,-2.1+j*.12,-5],mat('#a4aaa9',.13,1));pedestal.rotation.y=j*.22}for(let j=0;j<4;j++){const r=new THREE.Mesh(new THREE.TorusKnotGeometry(1.2,.11,92,8,2,3),mat('#bec5b9',.11,1));r.position.set((j-1.4)*5,2,-8-j*.5);r.scale.setScalar(.6+j*.1);group.add(r);animations.push({obj:r,kind:'spin',offset:j})}break;
+ case 7: // Dim ultraviolet film projectors
+  for(let j=0;j<10;j++){let b=addBox(group,[.14,2+p()*5,.35],[(p()-.5)*18,p()*5,-8-p()*8],mat('#57406a',.22,.6));b.rotation.set(.2,p()*1.2,p()*.2)}break;
+ case 8: // Mirrored geometry and duality
+  for(let side of [-1,1])for(let j=0;j<6;j++){const m=addBox(group,[.17,9-j*.8,1],[(side*(4+j)),0,-5-j*1.6],mat(j%2?'#65628a':'#bcc1cf',.17,.94));m.rotation.y=side*.24}break;
+ case 9: // Green industrial archways / telemetric pipes
+  for(let j=0;j<9;j++){const b=addBox(group,[.65,4+p()*7,.65],[(p()-.5)*18,p()*3,-8-p()*9],mat('#566b59',.28,.78));b.rotation.y=j*.2}break;
+ case 10: // The actual vault, a halo of metallic concentric rings
+  for(let j=0;j<9;j++){const ring=new THREE.Mesh(new THREE.TorusGeometry(3.5+j*.47,.1,8,96),new THREE.MeshBasicMaterial({color:j%2?'#8e352c':'#d1a48b',transparent:true,opacity:Math.max(.17,.62-j*.04),side:THREE.DoubleSide}));ring.position.set(2,2.5,-9-j*.36);group.add(ring);animations.push({obj:ring,kind:'vault',offset:j})}break;
+ }
+ const pl=new THREE.PointLight(color,i===ERAS.length-1?18:13,24,2);pl.position.set(3,5,-4);group.add(pl);
+ const hiddenName=worldText(group,ERAS[i].short,`${ERAS[i].year}  //  ${ERAS[i].visual}`,color,[5.7,8,-8],[6.5,2.4]);hiddenName.rotation.y=-.2;
+ addParticles(group,color,touchScreen?38:88);
  }
  for(let i=0;i<ERAS.length;i++){active=i;const stage=new THREE.Group();stage.position.z=centerZ(i);world.add(stage);groups.push(stage);const releases=eraReleaseList(i);stageEnvironment(stage,i,ERAS[i].accent);if(i===ERAS.length-1){giveArtworkMesh(stage,releases[0],[1.45,5.6,-4.4],[3.45,3.45],0)}else releases.slice(0,4).forEach((r,j)=>{const hasMany=releases.length>2;const x=[2.05,5.3,-1.25,7.8][j];const y=[3.15,4.8,5.2,1.45][j];const z=[1.1,-1.8,-4.2,-3.1][j];giveArtworkMesh(stage,r,[x,y,z],[hasMany?2.55:3.7,hasMany?2.55:3.7],j)});
  // Original short archival title on each stage floor
@@ -464,26 +367,15 @@ async function initWorld(){let THREE;try{THREE=await import('https://cdn.jsdeliv
  let frames=0,rafId=0;camera.position.set(0,2.6,targetCameraZ);camera.lookAt(1.8,2.3,centerZ(0)-3);
  function animate(){if(disposed)return;rafId=requestAnimationFrame(animate);const dt=Math.min(clock.getDelta(),.05);motion+=dt;const targetX=(pointerX*.55)+dragOffset;dragOffset*=.984;const vx=targetX+Math.sin(motion*.18)*.13;const destZ=targetCameraZ;groups.forEach((g,j)=>{g.visible=Math.abs(j-app.index)<=1});const eased=prefersReduced?.13:.035;camera.position.z+=(destZ-camera.position.z)*eased;camera.position.x+=(vx-camera.position.x)*.03;camera.position.y+=(2.75-pointerY*.35-camera.position.y)*.034;camera.lookAt(1.9+vx*.42,2.2-pointerY*.24,camera.position.z-14.5);
  if(!prefersReduced){for(const v of animations){const o=v.obj,s=motion+(v.offset||0);if(v.kind==='song'){o.position.y=v.y+Math.sin(s*.78)*.075}else if(v.kind==='art'){o.position.y=v.y+Math.sin(s*.48)*.16;o.rotation.y=v.baseRot+Math.sin(s*.29)*.08}else if(v.kind==='shard'){o.rotation.z+=dt*.042}else if(v.kind==='slowspin'){o.rotation.y+=dt*.07}else if(v.kind==='spin'){o.rotation.y+=dt*.14;o.rotation.z+=dt*.1}else if(v.kind==='particle'){o.rotation.y+=dt*.004}else if(v.kind==='vinyl'){o.rotation.z+=dt*.16;o.position.z=-2.75+Math.sin(s*.6)*.13}else if(v.kind==='vault'){o.rotation.z+=dt*.012}}}
-  // Actual continuously moving orbits across both sides and multiple depths of the album.
-  // Hover gently pauses a relic so the preview stays easy to activate.
+  // Each artifact follows a different slow orbital drift. Hover locks it into a highlighted state.
   const rack=songRacks.get(app.index);
   if(rack)for(const v of rack.motions){
-   const held=hoveredWorldSong===v.hit||focusedWorldSong===v.hit;
-   v.hoverMix+=(Number(held)-v.hoverMix)*Math.min(1,dt*6);
-   const orbitTime=motion*v.velocity+v.phase;
-   const pathX=v.centerX+Math.cos(orbitTime)*v.rx;
-   const pathY=v.centerY+Math.sin(orbitTime*.88+v.j*.15)*v.ry;
-   const pathZ=v.cz+Math.sin(orbitTime*1.21+v.j*.71)*2.45;
-   if(!prefersReduced){
-    const blend=held?.015:.13;
-    v.obj.position.x+=(pathX-v.obj.position.x)*blend;
-    v.obj.position.y+=(pathY-v.obj.position.y)*blend;
-    v.obj.position.z+=(pathZ-v.obj.position.z)*blend;
-    v.model.rotation.y+=dt*(.24+(v.j%3)*.06)*(1-v.hoverMix*.88);
-    v.model.rotation.z+=dt*.12*(v.j%2?1:-1)*(1-v.hoverMix*.88);
-   }
-   const wanted=v.scale*(held?1.22:1);
-   v.obj.scale.setScalar(v.obj.scale.x+(wanted-v.obj.scale.x)*.11);
+   const hover=hoveredWorldSong===v.hit||focusedWorldSong===v.hit;
+   const s=motion*v.velocity+v.phase;
+   v.obj.position.set(v.base.x+(prefersReduced?0:Math.sin(s)*.28),v.base.y+(prefersReduced?0:Math.cos(s*.85)*.32),v.base.z+(prefersReduced?0:Math.sin(s*.69)*.39));
+   if(!prefersReduced){v.model.rotation.y+=dt*(hover?.6:.17);v.model.rotation.z+=dt*.042;}
+   const targetScale=v.scale*(hover?1.18:1);const current=v.obj.scale.x+(targetScale-v.obj.scale.x)*.13;
+   v.obj.scale.setScalar(current);
   }
  // CSS-backed album captions stay sharp even on high-DPI screens and at small 3D sizes.
   for(const l of worldLabelTargets){
