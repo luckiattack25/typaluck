@@ -58,7 +58,7 @@ function bindSongRows(){
 async function loadAlbumTracks(release){
  if(albumTracks.has(release.id))return albumTracks.get(release.id);
  if(trackRequests.has(release.id))return trackRequests.get(release.id);
- if(!release.appleId){const rows=fallbackTracks(release);albumTracks.set(release.id,rows);return rows}
+ if(!release.appleId){const rows=fallbackTracks(release);albumTracks.set(release.id,rows);app.world?.setTracks(release.id,rows);return rows}
  const promise=(async()=>{
   let rows=[];
   try{
@@ -80,6 +80,7 @@ async function loadAlbumTracks(release){
   }catch(error){console.info('Album tracklist unavailable for '+release.title,error?.message||'network error')}
   if(!rows.length)rows=fallbackTracks(release);
   albumTracks.set(release.id,rows);
+  app.world?.setTracks(release.id,rows);
   if(app.drawer&&app.detail===release.id)renderDrawer();
   return rows;
  })();
@@ -93,6 +94,8 @@ function songListHTML(r){
 }
 
 function eraReleaseList(index){const id=ERAS[index].id;return RELEASES.filter(r=>r.era===id).sort((a,b)=>(a.id===id?-1:0)-(b.id===id?-1:0))}
+// Load official release tracks as visitors walk into a new 3D room.
+function warmEraSongs(index){const release=eraReleaseList(index)[0];if(release&&!albumTracks.has(release.id))void loadAlbumTracks(release)}
 function announce(text){$('#announcer').textContent=text}
 
 function updateFallbackArt(){const rs=eraReleaseList(app.index);$$('.fallback-plane').forEach((plane,i)=>{const r=rs[i]||RELEASES[(app.index+i)%RELEASES.length];const url=app.coverUrls.get(r.id);plane.innerHTML=url?`<img src="${escapeHTML(url)}" alt="" onerror="this.parentElement.classList.remove('has-art');this.remove()">`:'';plane.classList.toggle('has-art',Boolean(url))})}
@@ -106,7 +109,7 @@ function updateEraUI(){const e=ERAS[app.index];document.documentElement.style.se
 function createRail(){$('#yearRail').innerHTML=ERAS.map((e,i)=>`<button class="year-stop ${i===0?'active':''}" data-era="${i}" aria-label="Go to ${e.title}, ${e.year}" title="${escapeHTML(e.title)}"><span class="dot"></span><span>${String(i+1).padStart(2,'0')}</span></button>`).join('');$$('.year-stop').forEach(el=>el.addEventListener('click',()=>goTo(Number(el.dataset.era))))}
 
 let travelTimer=null;
-function goTo(index,{instant=false}={}){stopPreview();const next=clamp(index,0,ERAS.length-1);if(next===app.index&&!instant)return;if(app.catalog||app.info)return;closeDrawer();const distance=Math.abs(next-app.index);app.index=next;updateEraUI();if(app.world)app.world.setEra(next,instant);if(!prefersReduced&&!instant&&distance>1){const w=$('#wipe');$('#wipeYear').textContent=ERAS[next].year.split('—')[0];w.classList.remove('in');void w.offsetWidth;w.classList.add('in');clearTimeout(travelTimer);travelTimer=setTimeout(()=>w.classList.remove('in'),1000)} }
+function goTo(index,{instant=false}={}){stopPreview();const next=clamp(index,0,ERAS.length-1);if(next===app.index&&!instant)return;if(app.catalog||app.info)return;closeDrawer();const distance=Math.abs(next-app.index);app.index=next;updateEraUI();warmEraSongs(next);if(app.world)app.world.setEra(next,instant);if(!prefersReduced&&!instant&&distance>1){const w=$('#wipe');$('#wipeYear').textContent=ERAS[next].year.split('—')[0];w.classList.remove('in');void w.offsetWidth;w.classList.add('in');clearTimeout(travelTimer);travelTimer=setTimeout(()=>w.classList.remove('in'),1000)} }
 function next(){if(app.entered)goTo(app.index+1)}
 function previous(){if(app.entered)goTo(app.index-1)}
 
@@ -174,7 +177,9 @@ async function initWorld(){let THREE;try{THREE=await import('https://cdn.jsdeliv
  const floor=new THREE.Mesh(new THREE.PlaneGeometry(42,G*ERAS.length+140),groundM);floor.rotation.x=-Math.PI/2;floor.position.set(0,-3,centerZ((ERAS.length-1)/2));scene.add(floor);
  const grid=new THREE.GridHelper(G*ERAS.length+90,105,'#394944','#1c2421');grid.position.set(0,-2.975,centerZ((ERAS.length-1)/2));const gmat=Array.isArray(grid.material)?grid.material[0]:grid.material;gmat.transparent=true;gmat.opacity=.22;scene.add(grid);
  const sideLines=[];for(const side of [-1,1]){for(let j=0;j<ERAS.length;j++){const stage=worldText;const beam=addBox(world,[.055,.055,G-.8],[side*9.7,-2.86,centerZ(j)],new THREE.MeshBasicMaterial({color:colors[j],transparent:true,opacity:.33}));sideLines.push(beam);}}
- const groups=[],worldLabelTargets=[];
+ const groups=[],worldLabelTargets=[],songRacks=new Map(),vinylTracks=[],vinylLabels=[];
+ let hoveredWorldSong=null,worldSongHoverTimer=null;
+ const worldRow={classList:{add(){},remove(){}}};
  function addParticles(group,col,num=80){const arr=new Float32Array(num*3);for(let i=0;i<num;i++){arr[i*3]=(Math.random()-.5)*22;arr[i*3+1]=Math.random()*15-3;arr[i*3+2]=(Math.random()-.5)*25;}const geom=new THREE.BufferGeometry();geom.setAttribute('position',new THREE.BufferAttribute(arr,3));const pts=new THREE.Points(geom,new THREE.PointsMaterial({color:col,size:touchScreen?.05:.064,transparent:true,opacity:.65,depthWrite:false,sizeAttenuation:true}));group.add(pts);animations.push({obj:pts,spin:.001,kind:'particle'})}
  function arch(group,z,col){const tmat=new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:.38,depthWrite:false});addBox(group,[.09,11,.09],[-9,2,z],tmat);addBox(group,[.09,11,.09],[9,2,z],tmat);addBox(group,[18,.09,.09],[0,7.5,z],tmat)}
  function giveArtworkMesh(group,r,pos,size,i){const holder=new THREE.Group();holder.position.set(...pos);holder.rotation.y=[.12,-.17,.2][i%3];group.add(holder);const [w,h]=size;const artMat=new THREE.MeshBasicMaterial({color:'#ffffff',side:THREE.DoubleSide});let c=createLabelCanvas(r.title,`${r.year} / ARCHIVE RECORD — SELECT TO VIEW`,ERAS[active].accent,512,512);const placeholder=new THREE.CanvasTexture(c);placeholder.colorSpace=THREE.SRGBColorSpace;artMat.map=placeholder;const art=new THREE.Mesh(new THREE.PlaneGeometry(w,h),artMat);art.position.z=.14;art.userData={releaseId:r.id,eraIndex:active};holder.add(art);interactive.push(art);frame(holder,w+.18,h+.18,.1);
@@ -187,6 +192,79 @@ async function initWorld(){let THREE;try{THREE=await import('https://cdn.jsdeliv
  animations.push({obj:holder,kind:'art',x:pos[0],y:pos[1],offset:active*.6+i*2,baseRot:holder.rotation.y});
  textureTargets.set(r.id,art);
  const already=app.coverUrls.get(r.id);if(already)updateTexture(r.id,already);
+ }
+ // These are real THREE.Mesh panels living inside each gallery, not track buttons in a side drawer.
+ // High-resolution HTML captions are projected on top to stay readable at different display sizes.
+ function makeSongRack(stage,index,release){
+  const root=new THREE.Group();stage.add(root);
+  songRacks.set(index,{root,releaseId:release.id,page:0,objects:[],captions:[],motions:[]});
+  drawSongRack(index);
+ }
+ function drawSongRack(index){
+  const rack=songRacks.get(index);if(!rack)return;
+  if(hoveredWorldSong?.userData?.eraIndex===index)clearWorldSongHover();
+  for(const o of rack.objects){const at=interactive.indexOf(o);if(at!==-1)interactive.splice(at,1)}
+  for(const v of rack.motions){const at=animations.indexOf(v);if(at!==-1)animations.splice(at,1)}
+  for(const l of rack.captions){const at=worldLabelTargets.indexOf(l);if(at!==-1)worldLabelTargets.splice(at,1);l.el.remove()}
+  rack.objects=[];rack.motions=[];rack.captions=[];
+  rack.root.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material){for(const m of Array.isArray(o.material)?o.material:[o.material])m.dispose()}});
+  rack.root.clear();
+  const release=RELEASES.find(r=>r.id===rack.releaseId),rows=release?trackRows(release):[];
+  const pages=Math.max(1,Math.ceil(rows.length/8));rack.page=Math.min(rack.page,pages-1);
+  const shown=rows.slice(rack.page*8,rack.page*8+8);
+  if(!shown.length){
+   const placeholder=worldText(rack.root,'TRACKS / INCOMING',albumTracks.has(rack.releaseId)?'OPEN THE RECORD FOR MORE':'RETRIEVING SONG INDEX…',ERAS[index].accent,[7.8,3.0,-4],[5,1.35]);placeholder.rotation.y=-.1;
+  }
+  for(let j=0;j<shown.length;j++){
+   const track=shown[j],globalIndex=rack.page*8+j;
+   const col=j%2,row=Math.floor(j/2), x=6.5+col*3.75, y=6.05-row*1.7,z=-2.0-col*.9-row*.3;
+   const anchor=new THREE.Group();anchor.position.set(x,y,z);anchor.rotation.y=-.08+col*.09;rack.root.add(anchor);
+   const material=new THREE.MeshStandardMaterial({color:'#12191a',metalness:.68,roughness:.29,emissive:new THREE.Color(ERAS[index].accent),emissiveIntensity:.065,side:THREE.DoubleSide});
+   const hit=new THREE.Mesh(new THREE.BoxGeometry(3.3,.93,.12),material);anchor.add(hit);
+   hit.userData={trackSong:track,releaseId:release.id,trackNumber:globalIndex,eraIndex:index};
+   rack.objects.push(hit);interactive.push(hit);
+   const border=new THREE.LineSegments(new THREE.EdgesGeometry(hit.geometry),new THREE.LineBasicMaterial({color:ERAS[index].accent,transparent:true,opacity:.38}));anchor.add(border);
+   addBox(anchor,[.055,.7,.15],[-1.55,0,.11],new THREE.MeshBasicMaterial({color:ERAS[index].accent}));
+   const pin=new THREE.Mesh(new THREE.SphereGeometry(.065,10,8),new THREE.MeshBasicMaterial({color:track.previewUrl?ERAS[index].accent:'#626962'}));pin.position.set(1.45,.31,.12);anchor.add(pin);
+   const label=document.createElement('div');label.className='world-song-label';
+   label.innerHTML=`<span class="world-song-index">${String(globalIndex+1).padStart(2,'0')}</span><span class="world-song-main"><strong>${escapeHTML(track.name)}</strong><small>${track.previewUrl?'◉ HOVER TO HEAR':'NO AUDIO PREVIEW'}</small></span>`;
+   label.setAttribute('aria-hidden','true');$('#worldLabels').appendChild(label);
+   const t={el:label,holder:anchor,offset:[0,0,.17],eraIndex:index,rack,kind:'song'};
+   rack.captions.push(t);worldLabelTargets.push(t);
+   const motion={obj:anchor,kind:'song',y,offset:index*.71+j*.45};rack.motions.push(motion);animations.push(motion);
+  }
+  if(index===app.index)updateWorldSongPager(rack,rows.length);
+ }
+ function updateWorldSongPager(rack,total){const el=$('#worldSongPager');if(!el)return;
+  el.hidden=!app.entered||!rack||!total||app.index===ERAS.length-1;
+  if(!rack||!total)return;
+  const page=rack.page,count=Math.ceil(total/8),from=page*8+1,to=Math.min(total,(page+1)*8);
+  $('#worldSongCount').textContent=`${String(from).padStart(2,'0')}—${String(to).padStart(2,'0')} / ${String(total).padStart(2,'0')}`;
+  $('#worldSongPrev').disabled=page===0;$('#worldSongNext').disabled=page===count-1;
+ }
+ function changeWorldSongPage(direction){const rack=songRacks.get(app.index);if(!rack)return;
+  const release=RELEASES.find(r=>r.id===rack.releaseId),total=release?trackRows(release).length:0;
+  const next=clamp(rack.page+direction,0,Math.max(0,Math.ceil(total/8)-1));
+  if(next===rack.page)return;stopPreview();rack.page=next;drawSongRack(app.index);
+ }
+ function setTracks(releaseId,rows){const eraIndex=ERAS.findIndex(e=>e.id===RELEASES.find(r=>r.id===releaseId)?.era);
+  if(eraIndex<0)return;
+  if(eraIndex===ERAS.length-1){vinylTracks.forEach((mesh,i)=>mesh.userData.trackSong=rows[i]||null);
+   vinylLabels.forEach((label,i)=>{const t=rows[i];if(label&&t){const strong=label.querySelector('strong'),small=label.querySelector('small');if(strong)strong.textContent=t.name;if(small)small.textContent=t.previewUrl?'HOVER / CLICK TO LISTEN':'PREVIEW NOT AVAILABLE'}});return}
+  const rack=songRacks.get(eraIndex);if(rack&&rack.releaseId===releaseId)drawSongRack(eraIndex);
+ }
+ function clearWorldSongHover(){clearTimeout(worldSongHoverTimer);worldSongHoverTimer=null;
+  if(hoveredWorldSong){hoveredWorldSong.material.emissiveIntensity=.065;hoveredWorldSong.scale.setScalar(1);hoveredWorldSong=null}
+  if(activePreviewTrack||playingRow===worldRow)stopPreview();
+ }
+ function handleWorldSongHover(hit){const mesh=hit?.object?.userData?.trackSong?hit.object:null;
+  if(mesh===hoveredWorldSong)return;
+  clearWorldSongHover();hoveredWorldSong=mesh;
+  if(!mesh)return;
+  mesh.material.emissiveIntensity=.5;mesh.scale.setScalar(1.035);
+  const track=mesh.userData.trackSong;
+  if(!track?.previewUrl)return;
+  worldSongHoverTimer=setTimeout(()=>{if(hoveredWorldSong===mesh&&app.entered&&!app.drawer&&!app.catalog&&!app.info)void startPreview(track,worldRow)},220);
  }
  function stageEnvironment(group,i,color){const p=()=>Math.random();const accent=new THREE.Color(color);arch(group,4,color);arch(group,-7,color);
  // Each decade-chapter owns an identifiable physical installation, not a CSS color swap.
@@ -219,26 +297,32 @@ async function initWorld(){let THREE;try{THREE=await import('https://cdn.jsdeliv
  const hiddenName=worldText(group,ERAS[i].short,`${ERAS[i].year}  //  ${ERAS[i].visual}`,color,[5.7,8,-8],[6.5,2.4]);hiddenName.rotation.y=-.2;
  addParticles(group,color,touchScreen?38:88);
  }
- function addVinylRecords(group){for(let t=0;t<TRACKS.length;t++){const x=(t%4-1.5)*2.9;const y=5.4-Math.floor(t/4)*2.8;const holder=new THREE.Group();holder.position.set(x+1.7,y,-2.75);group.add(holder);const dark=new THREE.Mesh(new THREE.CircleGeometry(1.02,48),new THREE.MeshStandardMaterial({color:'#111215',metalness:.63,roughness:.26,side:THREE.DoubleSide}));dark.userData={trackIndex:t,eraIndex:ERAS.length-1};holder.add(dark);interactive.push(dark);for(let j=0;j<4;j++){const ring=new THREE.Mesh(new THREE.RingGeometry(.56+j*.10,.567+j*.10,72),new THREE.MeshBasicMaterial({color:'#6a6b72',side:THREE.DoubleSide,transparent:true,opacity:.58}));ring.position.z=.016+j*.003;holder.add(ring)}const art=new THREE.Mesh(new THREE.CircleGeometry(.35,48),new THREE.MeshBasicMaterial({color:colors[ERAS.length-1],side:THREE.DoubleSide}));art.position.z=.035;holder.add(art);const labelTex=new THREE.CanvasTexture(createLabelCanvas(String(t+1).padStart(2,'0'),TRACKS[t].name,colors[ERAS.length-1].getStyle(),300,300));const label=new THREE.Mesh(new THREE.CircleGeometry(.34,48),new THREE.MeshBasicMaterial({map:labelTex,side:THREE.DoubleSide}));label.position.z=.04;holder.add(label);animations.push({obj:holder,kind:'vinyl',offset:t})}}
+ function addVinylRecords(group){for(let t=0;t<TRACKS.length;t++){const x=(t%4-1.5)*2.9;const y=5.4-Math.floor(t/4)*2.8;const holder=new THREE.Group();holder.position.set(x+1.7,y,-2.75);group.add(holder);const dark=new THREE.Mesh(new THREE.CircleGeometry(1.02,48),new THREE.MeshStandardMaterial({color:'#111215',metalness:.63,roughness:.26,side:THREE.DoubleSide}));dark.userData={trackIndex:t,eraIndex:ERAS.length-1,trackSong:fallbackTracks(RELEASES.find(r=>r.id==='last-laugh'))[t]||null};holder.add(dark);interactive.push(dark);vinylTracks.push(dark);
+ const songCaption=document.createElement('div');songCaption.className='world-song-label world-vinyl-label';songCaption.setAttribute('aria-hidden','true');
+ songCaption.innerHTML=`<span class="world-song-index">${String(t+1).padStart(2,'0')}</span><span class="world-song-main"><strong>${escapeHTML(TRACKS[t].name)}</strong><small>HOVER / CLICK TO LISTEN</small></span>`;
+ $('#worldLabels').appendChild(songCaption);vinylLabels.push(songCaption);worldLabelTargets.push({el:songCaption,holder,offset:[0,-1.24,.2],eraIndex:ERAS.length-1,kind:'vinyl'});
+ for(let j=0;j<4;j++){const ring=new THREE.Mesh(new THREE.RingGeometry(.56+j*.10,.567+j*.10,72),new THREE.MeshBasicMaterial({color:'#6a6b72',side:THREE.DoubleSide,transparent:true,opacity:.58}));ring.position.z=.016+j*.003;holder.add(ring)}const art=new THREE.Mesh(new THREE.CircleGeometry(.35,48),new THREE.MeshBasicMaterial({color:colors[ERAS.length-1],side:THREE.DoubleSide}));art.position.z=.035;holder.add(art);const labelTex=new THREE.CanvasTexture(createLabelCanvas(String(t+1).padStart(2,'0'),TRACKS[t].name,colors[ERAS.length-1].getStyle(),300,300));const label=new THREE.Mesh(new THREE.CircleGeometry(.34,48),new THREE.MeshBasicMaterial({map:labelTex,side:THREE.DoubleSide}));label.position.z=.04;holder.add(label);animations.push({obj:holder,kind:'vinyl',offset:t})}}
  for(let i=0;i<ERAS.length;i++){active=i;const stage=new THREE.Group();stage.position.z=centerZ(i);world.add(stage);groups.push(stage);const releases=eraReleaseList(i);stageEnvironment(stage,i,ERAS[i].accent);if(i===ERAS.length-1){giveArtworkMesh(stage,releases[0],[1.45,5.6,-4.4],[3.45,3.45],0);addVinylRecords(stage)}else releases.slice(0,4).forEach((r,j)=>{const hasMany=releases.length>2;const x=[2.05,5.3,-1.25,7.8][j];const y=[3.15,4.8,5.2,1.45][j];const z=[1.1,-1.8,-4.2,-3.1][j];giveArtworkMesh(stage,r,[x,y,z],[hasMany?2.55:3.7,hasMany?2.55:3.7],j)});
  // Original short archival title on each stage floor
  worldText(stage,`${String(i+1).padStart(2,'0')} / ${ERAS[i].start}`,ERAS[i].tag,ERAS[i].accent,[-6,-1.0,-4],[3,1.3]).rotation.y=.19;
  }
+ // Add individually selectable song artifacts to the active gallery space.
+ for(let i=0;i<ERAS.length-1;i++){const release=eraReleaseList(i)[0];if(release)makeSongRack(groups[i],i,release)}
  active=0;
  function updateTexture(id,url){const m=textureTargets.get(id);if(!m)return;textureLoader.load(url,tex=>{if(disposed)return;tex.colorSpace=THREE.SRGBColorSpace;tex.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());m.material.map=tex;m.material.color.set('#ffffff');m.material.needsUpdate=true},undefined,()=>{console.info('3D artwork image unavailable for '+id)})}
- const onPointerMove=(e)=>{pointerX=(e.clientX/innerWidth-.5)*2;pointerY=(e.clientY/innerHeight-.5)*2;if(dragging){dragOffset=clamp(dragOffset+(e.clientX-dragLastX)*.011,-2.6,2.6);dragLastX=e.clientX;wasClicked=true}if(app.entered&&!app.drawer&&!app.catalog&&!app.info){const hit=pick(e);$('#hotspot').classList.toggle('show',Boolean(hit));$('#hotspot').style.left=e.clientX+'px';$('#hotspot').style.top=e.clientY+'px';$('#hotspot').textContent=hit?(hit.object.userData.trackIndex!==undefined?'OPEN TRACK RECORD ↗':'INSPECT ALBUM ARTWORK ↗'):'';renderer.domElement.style.cursor=hit?'pointer':'grab';}}
+ const onPointerMove=(e)=>{pointerX=(e.clientX/innerWidth-.5)*2;pointerY=(e.clientY/innerHeight-.5)*2;if(dragging){dragOffset=clamp(dragOffset+(e.clientX-dragLastX)*.011,-2.6,2.6);dragLastX=e.clientX;wasClicked=true;clearWorldSongHover()}if(app.entered&&!app.drawer&&!app.catalog&&!app.info&&!dragging){const hit=pick(e);handleWorldSongHover(hit);$('#hotspot').classList.toggle('show',Boolean(hit));$('#hotspot').style.left=e.clientX+'px';$('#hotspot').style.top=e.clientY+'px';const track=hit?.object.userData.trackSong;$('#hotspot').textContent=track?(track.previewUrl?'HOVER TO LISTEN · CLICK TO PLAY ↗':'PREVIEW UNAVAILABLE · VIEW RECORD ↗'):hit?'INSPECT ALBUM ARTWORK ↗':'';renderer.domElement.style.cursor=hit?'pointer':'grab';}else if(!app.entered)clearWorldSongHover();}
  const raycaster=new THREE.Raycaster(),ndc=new THREE.Vector2();
  function pick(e){const rect=renderer.domElement.getBoundingClientRect();ndc.set(((e.clientX-rect.left)/rect.width)*2-1,-(((e.clientY-rect.top)/rect.height)*2-1));raycaster.setFromCamera(ndc,camera);const hits=raycaster.intersectObjects(interactive,false);return hits.find(hit=>hit.object.userData.eraIndex===app.index)}
- const onPointerDown=e=>{if(e.button!==0)return;wasClicked=false;dragging=true;dragLastX=e.clientX};const onPointerUp=e=>{dragging=false;if(wasClicked||!app.entered||app.catalog||app.drawer||app.info)return;const hit=pick(e);if(!hit)return;const id=hit.object.userData.releaseId;if(id)openDrawer(id);else if(hit.object.userData.trackIndex!==undefined)openDrawer('last-laugh')};
- renderer.domElement.addEventListener('pointermove',onPointerMove,{passive:true});renderer.domElement.addEventListener('pointerdown',onPointerDown);window.addEventListener('pointerup',onPointerUp);
+ const onPointerDown=e=>{if(e.button!==0)return;wasClicked=false;dragging=true;dragLastX=e.clientX};const onPointerUp=e=>{dragging=false;if(wasClicked||!app.entered||app.catalog||app.drawer||app.info)return;const hit=pick(e);if(!hit)return;const target=hit.object.userData;const song=target.trackSong;if(song){if(song.previewUrl){if(activePreviewTrack===song.previewUrl&&!previewAudio.paused)stopPreview();else void startPreview(song,worldRow)}else if(target.releaseId)openDrawer(target.releaseId);else openDrawer('last-laugh');return}if(target.releaseId)openDrawer(target.releaseId);else if(target.trackIndex!==undefined)openDrawer('last-laugh')};
+ renderer.domElement.addEventListener('pointermove',onPointerMove,{passive:true});renderer.domElement.addEventListener('pointerleave',clearWorldSongHover);renderer.domElement.addEventListener('pointerdown',onPointerDown);window.addEventListener('pointerup',onPointerUp);
  let frames=0,rafId=0;camera.position.set(0,2.6,targetCameraZ);camera.lookAt(1.8,2.3,centerZ(0)-3);
  function animate(){if(disposed)return;rafId=requestAnimationFrame(animate);const dt=Math.min(clock.getDelta(),.05);motion+=dt;const targetX=(pointerX*.55)+dragOffset;dragOffset*=.984;const vx=targetX+Math.sin(motion*.18)*.13;const destZ=targetCameraZ;groups.forEach((g,j)=>{g.visible=Math.abs(j-app.index)<=1});const eased=prefersReduced?.13:.035;camera.position.z+=(destZ-camera.position.z)*eased;camera.position.x+=(vx-camera.position.x)*.03;camera.position.y+=(2.75-pointerY*.35-camera.position.y)*.034;camera.lookAt(1.9+vx*.42,2.2-pointerY*.24,camera.position.z-14.5);
- if(!prefersReduced){for(const v of animations){const o=v.obj,s=motion+v.offset;if(v.kind==='art'){o.position.y=v.y+Math.sin(s*.48)*.16;o.rotation.y=v.baseRot+Math.sin(s*.29)*.08}else if(v.kind==='shard'){o.rotation.z+=dt*.042}else if(v.kind==='slowspin'){o.rotation.y+=dt*.07}else if(v.kind==='spin'){o.rotation.y+=dt*.14;o.rotation.z+=dt*.1}else if(v.kind==='particle'){o.rotation.y+=dt*.004}else if(v.kind==='vinyl'){o.rotation.z+=dt*.16;o.position.z=-2.75+Math.sin(s*.6)*.13}else if(v.kind==='vault'){o.rotation.z+=dt*.012}}}
+ if(!prefersReduced){for(const v of animations){const o=v.obj,s=motion+v.offset;if(v.kind==='song'){o.position.y=v.y+Math.sin(s*.78)*.075}else if(v.kind==='art'){o.position.y=v.y+Math.sin(s*.48)*.16;o.rotation.y=v.baseRot+Math.sin(s*.29)*.08}else if(v.kind==='shard'){o.rotation.z+=dt*.042}else if(v.kind==='slowspin'){o.rotation.y+=dt*.07}else if(v.kind==='spin'){o.rotation.y+=dt*.14;o.rotation.z+=dt*.1}else if(v.kind==='particle'){o.rotation.y+=dt*.004}else if(v.kind==='vinyl'){o.rotation.z+=dt*.16;o.position.z=-2.75+Math.sin(s*.6)*.13}else if(v.kind==='vault'){o.rotation.z+=dt*.012}}}
  // CSS-backed album captions stay sharp even on high-DPI screens and at small 3D sizes.
   for(const l of worldLabelTargets){
    if(l.eraIndex!==app.index||!app.entered||app.drawer||app.catalog||app.info){l.el.hidden=true;continue}
    l.holder.updateWorldMatrix(true,false);
-   const point=l.holder.localToWorld(new THREE.Vector3(0,l.y,.2));
+   const point=l.holder.localToWorld(l.offset?new THREE.Vector3(...l.offset):new THREE.Vector3(0,l.y,.2));
    point.project(camera);
    if(point.z>1||point.z< -1||Math.abs(point.x)>1.1||Math.abs(point.y)>1.1){l.el.hidden=true;continue}
    l.el.hidden=false;l.el.style.left=((point.x+1)*innerWidth/2)+'px';l.el.style.top=((-point.y+1)*innerHeight/2)+'px';
@@ -247,11 +331,11 @@ async function initWorld(){let THREE;try{THREE=await import('https://cdn.jsdeliv
  animate();
  const resize=()=>{camera.aspect=innerWidth/innerHeight;camera.fov=touchScreen?68:52;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio||1,touchScreen?1.4:1.8))};window.addEventListener('resize',resize,{passive:true});
  window.addEventListener('pagehide',()=>{disposed=true;cancelAnimationFrame(rafId);renderer.dispose();for(const g of groups)g.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material){for(const m of (Array.isArray(o.material)?o.material:[o.material])){if(m.map)m.map.dispose();m.dispose()}}})},{once:true});
- return {setEra(i,instant){active=i;targetCameraZ=centerZ(i)+15.5;if(instant)camera.position.z=targetCameraZ},addCover:updateTexture};
+ return {setEra(i,instant){clearWorldSongHover();active=i;targetCameraZ=centerZ(i)+15.5;if(instant)camera.position.z=targetCameraZ;const rack=songRacks.get(i);updateWorldSongPager(rack,rack?trackRows(RELEASES.find(r=>r.id===rack.releaseId)).length:0)},setTracks,changeSongPage:changeWorldSongPage,addCover:updateTexture};
 }
 
-function enter(){if(app.entered)return;app.entered=true;$('#preloader').hidden=true;$('#entry').classList.add('hidden-entry');setTimeout(()=>{$('#entry').hidden=true},850);$('#topbar').hidden=false;$('#experience').hidden=false;$('#yearRail').hidden=false;$('#nextButton').focus({preventScroll:true});}
-function initControls(){$('#previewStop').addEventListener('click',stopPreview);document.addEventListener('visibilitychange',()=>{if(document.hidden)stopPreview()});createRail();updateEraUI();$('#enterButton').addEventListener('click',enter);$('#skipButton').addEventListener('click',enter);$('#brandButton').addEventListener('click',()=>goTo(0));$('#inspectButton').addEventListener('click',()=>openDrawer());$('#nextFromCopy').addEventListener('click',next);$('#prevButton').addEventListener('click',previous);$('#nextButton').addEventListener('click',next);$('#drawerClose').addEventListener('click',closeDrawer);$('#catalogButton').addEventListener('click',openCatalog);$('#catalogClose').addEventListener('click',closeCatalog);$('#catalogSearch').addEventListener('input',renderCatalog);$('#aboutButton').addEventListener('click',openInfo);$('#infoClose').addEventListener('click',closeInfo);
+function enter(){if(app.entered)return;app.entered=true;$('#preloader').hidden=true;$('#entry').classList.add('hidden-entry');setTimeout(()=>{$('#entry').hidden=true},850);$('#topbar').hidden=false;$('#experience').hidden=false;$('#yearRail').hidden=false;$('#nextButton').focus({preventScroll:true});warmEraSongs(app.index);if(app.world)app.world.setEra(app.index,true);}
+function initControls(){$('#worldSongPrev').addEventListener('click',()=>app.world?.changeSongPage(-1));$('#worldSongNext').addEventListener('click',()=>app.world?.changeSongPage(1));$('#previewStop').addEventListener('click',stopPreview);document.addEventListener('visibilitychange',()=>{if(document.hidden)stopPreview()});createRail();updateEraUI();$('#enterButton').addEventListener('click',enter);$('#skipButton').addEventListener('click',enter);$('#brandButton').addEventListener('click',()=>goTo(0));$('#inspectButton').addEventListener('click',()=>openDrawer());$('#nextFromCopy').addEventListener('click',next);$('#prevButton').addEventListener('click',previous);$('#nextButton').addEventListener('click',next);$('#drawerClose').addEventListener('click',closeDrawer);$('#catalogButton').addEventListener('click',openCatalog);$('#catalogClose').addEventListener('click',closeCatalog);$('#catalogSearch').addEventListener('input',renderCatalog);$('#aboutButton').addEventListener('click',openInfo);$('#infoClose').addEventListener('click',closeInfo);
  let lastWheel=0,wheelAccum=0;window.addEventListener('wheel',e=>{if(!app.entered||app.drawer||app.catalog||app.info)return;e.preventDefault();const now=performance.now();if(now-lastWheel<800)return;wheelAccum+=e.deltaY;if(Math.abs(wheelAccum)<18)return;goTo(app.index+Math.sign(wheelAccum));lastWheel=now;wheelAccum=0},{passive:false});
  window.addEventListener('keydown',e=>{if(e.key==='Escape'){if(app.catalog)closeCatalog();else if(app.info)closeInfo();else if(app.drawer)closeDrawer();return}if(!app.entered||app.drawer||app.catalog||app.info||['INPUT','TEXTAREA'].includes(document.activeElement?.tagName))return;if(['ArrowRight','ArrowDown','PageDown',' '].includes(e.key)){e.preventDefault();next()}else if(['ArrowLeft','ArrowUp','PageUp'].includes(e.key)){e.preventDefault();previous()}else if(e.key==='Home'){e.preventDefault();goTo(0)}else if(e.key==='End'){e.preventDefault();goTo(ERAS.length-1)}else if(e.key.toLowerCase()==='a')openCatalog()});
  let sx=0,sy=0;const touchMoveStart=e=>{sx=e.touches[0].clientX;sy=e.touches[0].clientY};window.addEventListener('touchstart',touchMoveStart,{passive:true});window.addEventListener('touchend',e=>{if(!app.entered||app.drawer||app.catalog||app.info)return;const dx=e.changedTouches[0].clientX-sx,dy=e.changedTouches[0].clientY-sy;if(Math.abs(dx)>60||Math.abs(dy)>70){if(Math.abs(dx)>Math.abs(dy))goTo(app.index+(dx<0?1:-1));else goTo(app.index+(dy<0?1:-1))}},{passive:true});
@@ -265,6 +349,7 @@ async function init(){
   const timeout=setTimeout(()=>{$('#preloader').hidden=true},2400);
   try {
     app.world=await initWorld();
+     if(app.world){for(const release of eraReleaseList(app.index))if(albumTracks.has(release.id))app.world.setTracks(release.id,albumTracks.get(release.id));}
   } catch(err) {
     console.warn('3D startup failure; gallery mode remains available.',err);
     $('#sceneFallback').style.display='block';

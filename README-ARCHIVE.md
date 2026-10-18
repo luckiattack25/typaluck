@@ -18,6 +18,10 @@ Open any record in the 3D museum or album gallery to access its **Track Index**.
 
 For releases unavailable from Apple's lookup, the site never displays guessed tracks or substitutes audio from a different artist. `Son of Sam` uses its independently published seven-track listing, and `Last Laugh` has its established 12-track list as a fallback. If no official short preview is returned, that track is displayed as unavailable for on-page playback and visitors can open the streaming release link instead. No full songs are hosted.
 
+## Songs in the 3D world
+
+Each era now has an interactive song installation **inside the actual Three.js gallery**. Song panels are physical raycastable 3D meshes, while their projected HTML captions stay crisp. Hover over a floating song panel to request its official preview; moving away stops playback, and clicking plays or stops it when browser autoplay rules require a gesture. Albums with more than eight tracks provide previous/next controls in the scene. Last Laugh uses its 12 floating vinyl artifacts for the same hover/click interactions. Missing preview URLs are identified as unavailable rather than substituted. Navigation and overlays stop audio.
+
 ## Sharp captions
 
 Labels beneath 3D cover objects are real high-resolution HTML text projected from their 3D anchor points rather than low-resolution canvas textures. They follow the scene's camera and remain interactive.
