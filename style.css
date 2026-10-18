@@ -54,3 +54,27 @@
 
 .world-vinyl-label{width:clamp(92px,8vw,148px);justify-content:center;gap:5px;text-align:center;background:#050609b0;padding:3px 5px;border-bottom:1px solid #d5ee9d44}
 .world-vinyl-label .world-song-main strong{font-size:9px}.world-vinyl-label .world-song-main small{font-size:7px;letter-spacing:0}
+
+/* SOUND RELICS — song names only materialize when the user discovers an artifact. */
+.artifact-tooltip{position:fixed;z-index:24;pointer-events:none;width:min(260px,calc(100vw - 26px));display:flex;flex-direction:column;align-items:flex-start;gap:7px;padding:15px 17px 16px;background:linear-gradient(122deg,rgba(18,28,27,.96),rgba(6,9,11,.95));border:1px solid color-mix(in srgb,var(--accent) 68%,white 12%);box-shadow:0 18px 80px #000b,0 0 28px color-mix(in srgb,var(--accent) 15%,transparent);backdrop-filter:blur(14px);color:#ecf2e9;transform:translate3d(0,0,0)}
+.artifact-tooltip>span{font:9px var(--mono);letter-spacing:.2em;color:var(--accent)}
+.artifact-tooltip strong{font:clamp(15px,1.5vw,21px)/1.04 var(--display);letter-spacing:-.055em;max-width:100%;overflow-wrap:anywhere;text-transform:uppercase}
+.artifact-tooltip small{font:8px/1.5 var(--mono);letter-spacing:.08em;color:#adbcb5}
+.tooltip-wave{display:flex;align-items:center;height:12px;gap:4px;margin-top:3px}
+.tooltip-wave b{height:4px;width:2px;background:var(--accent);border-radius:2px;animation:relicWave 1s ease-in-out infinite alternate}
+.tooltip-wave b:nth-child(3n){animation-delay:-.43s}.tooltip-wave b:nth-child(2n){animation-delay:-.72s}
+@keyframes relicWave{from{height:3px;opacity:.45}to{height:12px;opacity:1}}
+.song-focus{position:fixed;z-index:18;left:50%;bottom:clamp(65px,9vh,95px);width:min(380px,90vw);transform:translateX(-50%);display:grid;gap:10px;padding:18px 21px;background:linear-gradient(135deg,#141b1bf2,#070909f2);border:1px solid color-mix(in srgb,var(--accent) 60%,white 8%);box-shadow:0 20px 90px #000b,0 0 40px #83988921;backdrop-filter:blur(15px);color:#e9f2ea;animation:relicReveal .3s both}
+@keyframes relicReveal{from{opacity:0;transform:translate(-50%,10px)}to{opacity:1;transform:translate(-50%,0)}}
+.song-focus>span{font:9px var(--mono);letter-spacing:.17em;color:var(--accent)}
+.song-focus>strong{font:clamp(22px,2vw,28px)/1 var(--display);letter-spacing:-.045em;text-transform:uppercase;max-width:95%;overflow-wrap:anywhere}
+.song-focus>small{font:9px var(--mono);color:#b7beb7}
+.song-focus button{cursor:pointer}
+#songFocusClose{position:absolute;right:10px;top:9px;border:0;background:transparent;color:#f4f4ef;font-size:23px}
+#songFocusInspect{justify-self:start;padding:11px 15px;font:9px var(--mono);letter-spacing:.12em;background:var(--accent);border:0;color:#0c0e0c;transition:transform .2s}
+#songFocusInspect:hover{transform:translateX(4px)}
+.world-song-pager{background:rgba(3,7,8,.55);border:0;border-left:1px solid var(--accent);padding:9px 0 8px 13px;gap:8px;box-shadow:none}
+.world-song-pager>span{letter-spacing:.12em;font-size:9px}.world-song-pager button{background:rgba(25,33,30,.65);min-width:35px;min-height:30px}
+.world-song-pager.single-page>div{display:none}.world-song-pager small{letter-spacing:.08em}
+@media(max-width:790px){.artifact-tooltip{display:none}.song-focus{bottom:91px;left:50%;width:min(330px,82vw);padding:13px 15px}.song-focus>strong{font-size:19px}.song-focus>small{font-size:8px}.world-song-pager{right:15px;bottom:145px}.world-song-pager small{display:none}}
+@media(prefers-reduced-motion:reduce){.tooltip-wave b{animation:none}.song-focus{animation:none}}

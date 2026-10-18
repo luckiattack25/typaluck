@@ -18,9 +18,13 @@ Open any record in the 3D museum or album gallery to access its **Track Index**.
 
 For releases unavailable from Apple's lookup, the site never displays guessed tracks or substitutes audio from a different artist. `Son of Sam` uses its independently published seven-track listing, and `Last Laugh` has its established 12-track list as a fallback. If no official short preview is returned, that track is displayed as unavailable for on-page playback and visitors can open the streaming release link instead. No full songs are hosted.
 
-## Songs in the 3D world
+## SOUND RELICS — 3D song constellation
 
-Each era now has an interactive song installation **inside the actual Three.js gallery**. Song panels are physical raycastable 3D meshes, while their projected HTML captions stay crisp. Hover over a floating song panel to request its official preview; moving away stops playback, and clicking plays or stops it when browser autoplay rules require a gesture. Albums with more than eight tracks provide previous/next controls in the scene. Last Laugh uses its 12 floating vinyl artifacts for the same hover/click interactions. Missing preview URLs are identified as unavailable rather than substituted. Navigation and overlays stop audio.
+The 17 gallery chapters now use **procedural Three.js sound artifacts** in place of song-name boxes. Every song appears as a drifting three-dimensional object linked to its album cover through understated constellation paths. Vinyl objects, cassette fragments, light-drawn waveforms, glass memory shards with official cover fragments (when available), chrome orbital nodes and crystalline shapes vary by era and song.
+
+Titles remain hidden until discovery. Hovering reveals the song's title and triggers an official short preview where available; clicking pins a focused song view, holds preview playback, and offers an album detail link. Albums longer than eight songs can cycle through different artifacts. The *Last Laugh* vault shows twelve differently positioned vinyl-inspired objects simultaneously.
+
+Objects are constructed lazily and released on era changes to avoid filling all seventeen environments with expensive geometry at once. Reduced-motion settings minimize animation. If a preview URL is unavailable, the object remains inspectable but no unlicensed audio is substituted.
 
 ## Sharp captions
 
