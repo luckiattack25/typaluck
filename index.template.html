@@ -10,7 +10,7 @@
 <title>LUCKI — THE ARCHIVE // ENTER THE UNIVERSE</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=DM+Mono:wght@400;500&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=DM+Mono:wght@400;500&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
 <!-- INLINE_CSS -->
 <!-- Independent boot watchdog: even a missing browser feature cannot permanently cover the archive. -->
 <script>
@@ -33,6 +33,7 @@
 <body>
 <div id="scene" aria-hidden="true"></div>
 <div id="worldLabels" aria-label="3D record labels"></div>
+<!-- Keyboard-accessible companion to the visual-only WebGL scene. -->
 <div id="artifactTooltip" class="artifact-tooltip" hidden aria-live="off" aria-hidden="true"><span id="artifactTooltipIndex">MEMORY 01</span><strong id="artifactTooltipTitle">SONG</strong><small id="artifactTooltipMeta">HOVER TO LISTEN</small><i class="tooltip-wave" aria-hidden="true"><b></b><b></b><b></b><b></b><b></b><b></b><b></b><b></b></i></div>
 <div id="sceneFallback" class="scene-fallback" aria-hidden="true"><div class="fallback-halo"></div><div class="fallback-plane p1"></div><div class="fallback-plane p2"></div><div class="fallback-plane p3"></div><div class="fallback-floor"></div></div>
 <div class="grain" aria-hidden="true"></div>
@@ -55,14 +56,21 @@
 <header id="topbar" class="topbar" hidden>
   <button id="brandButton" class="brand" aria-label="Back to first era">LUCKI<span>.</span><sup>THE ARCHIVE</sup></button>
   <span class="top-center mono">AN INTERACTIVE JOURNEY THROUGH <b>2013—2026</b></span>
-  <div class="header-actions"><button id="catalogButton" class="header-link">ALL ARTWORK <span>↗</span></button><button id="aboutButton" class="header-menu" aria-label="About and controls">?</button></div>
+  <div class="header-actions"><button id="catalogButton" class="header-link">BROWSE ALBUMS <span>↗</span></button><button id="aboutButton" class="header-menu" aria-label="About and controls">?</button></div>
 </header>
 <nav id="yearRail" class="year-rail" aria-label="Choose a career era" hidden></nav>
 <main id="experience" class="experience" hidden>
   <div class="chapter-meta mono"><span id="chapterCounter">CHAPTER 001 / 017</span><span class="small-division"></span><span id="eraZone">THE FIRST TRANSMISSION</span></div>
-  <div id="sceneHint" class="scene-hint mono">MOVE CURSOR TO LOOK AROUND <span class="hint-cross">✛</span> FIND FLOATING SONG ARTIFACTS · HOVER TO LISTEN</div>
+  <div id="sceneHint" class="scene-hint mono">MOVE TO LOOK AROUND <span class="hint-cross">✛</span> EXPLORE ARTWORK · CLICK SONGS TO PREVIEW</div>
   <div id="hotspot" class="hotspot mono">CLICK TO INSPECT RECORD <span>↗</span></div>
-  <div id="worldSongPager" class="world-song-pager" hidden aria-label="Cycle through the song constellation"><span class="mono">MEMORY CONSTELLATION <b id="worldSongCount">01—08 / 08</b></span><div><button id="worldSongPrev" aria-label="Previous eight songs">←</button><button id="worldSongNext" aria-label="Next eight songs">→</button></div><small class="mono">HOVER TO REVEAL · CLICK TO FOCUS</small></div>
+  <button id="songIndexToggle" class="song-index-toggle" type="button" aria-expanded="false" aria-controls="songIndexPanel">♫ &nbsp; Browse songs <span aria-hidden="true">↗</span></button>
+  <section id="songIndexPanel" class="song-index-panel" aria-label="Songs in this era" hidden>
+    <div class="song-index-heading"><div><span class="mono">LISTENING ROOM</span><h3 id="songIndexHeading">Explore the songs</h3></div><button id="songIndexClose" type="button" aria-label="Close song explorer">×</button></div>
+    <label class="hover-option"><input id="hoverPreviewOptIn" type="checkbox"> <span>Play previews on hover</span></label>
+    <p id="hoverPreviewNote" class="index-description">Previews are off until enabled. Click a song to play its official sample.</p>
+    <div id="songIndexList" class="song-index-list" aria-live="polite"></div>
+  </section>
+  <div id="worldSongPager" class="world-song-pager" hidden aria-label="Cycle through the song constellation"><span class="mono">SONGS IN THIS ROOM <b id="worldSongCount">01—08 / 08</b></span><div><button id="worldSongPrev" aria-label="Previous eight songs">←</button><button id="worldSongNext" aria-label="Next eight songs">→</button></div><small class="mono">POINT TO DISCOVER · CLICK TO FOCUS</small></div>
   <div class="journey-copy">
     <div class="top-copy"><span id="eraIndex" class="index-label">01 / 17</span><span class="meta-bracket">◢ HISTORICAL RECORD ◣</span></div>
     <p id="eraDate" class="era-date mono">2013—14</p>
@@ -70,7 +78,7 @@
     <div class="era-sub"><i></i><span id="eraTag">THE FIRST TRANSMISSION</span></div>
     <p id="eraDesc" class="era-desc"></p>
     <div id="eraProjects" class="era-projects" aria-label="Projects in this era"></div>
-    <div class="era-actions"><button id="inspectButton" class="cta-main">INSPECT THIS ERA'S RECORDS <span>↗</span></button><button id="nextFromCopy" class="cta-next">NEXT ERA <span>→</span></button></div>
+    <div class="era-actions"><button id="inspectButton" class="cta-main">VIEW ERA RELEASES <span>↗</span></button><button id="nextFromCopy" class="cta-next">NEXT ERA <span>→</span></button></div>
   </div>
   <div class="edge-label left-edge mono">EST. 2013 // ARCHIVAL SYSTEM</div>
   <div class="edge-label right-edge mono">LUCKI ECK$ → LUCKI</div>
@@ -79,17 +87,17 @@
 </main>
 <div id="songFocus" class="song-focus" hidden><span id="songFocusIndex">ARCHIVE FRAGMENT / 01</span><button id="songFocusClose" aria-label="Close selected song">×</button><strong id="songFocusTitle">SONG NAME</strong><small id="songFocusHint">OFFICIAL PREVIEW</small><button id="songFocusInspect">EXPLORE RELEASE ↗</button></div>
 <div id="previewHud" class="preview-hud" hidden role="status" aria-live="polite"><span class="preview-disc" aria-hidden="true">◉</span><div class="preview-meta"><b id="previewSong">SONG PREVIEW</b><small id="previewStatus">OFFICIAL 30-SECOND SAMPLE</small></div><button id="previewStop" aria-label="Stop song preview">■</button></div>
-<aside id="drawer" class="drawer" aria-label="Era record details" aria-hidden="true">
+<aside id="drawer" class="drawer" role="dialog" aria-modal="true" aria-label="Era record details" aria-hidden="true" tabindex="-1" inert>
   <div class="drawer-top"><span class="mono">THE PHYSICAL ARCHIVE / RECORD INDEX</span><button id="drawerClose" aria-label="Close record details">✕</button></div>
   <div id="drawerContent" class="drawer-content"></div>
 </aside>
-<section id="catalog" class="catalog-overlay" role="dialog" aria-modal="true" aria-label="Full discography" hidden>
+<section id="catalog" class="catalog-overlay" tabindex="-1" role="dialog" aria-modal="true" aria-label="Full discography" hidden>
   <div class="catalog-top"><div><span class="mono">INDEX / ARTIFACTS / 001–018</span><h2>THE COMPLETE<br><em>RECORD WALL.</em></h2></div><button id="catalogClose" class="big-close" aria-label="Close discography">✕</button></div>
   <div class="catalog-controls"><label class="search-label"><span>⌕</span><input id="catalogSearch" type="search" placeholder="SEARCH AN ALBUM..." aria-label="Search releases"></label><span id="catalogCount" class="mono">18 RECORDS FOUND</span></div>
   <div id="catalogGrid" class="catalog-grid"></div>
   <footer class="catalog-footer mono">ARTWORK PROVIDED BY PUBLIC MUSIC-CATALOG PREVIEWS WHEN AVAILABLE. SOURCES: <a href="https://music.apple.com/us/artist/lucki/589757880" target="_blank" rel="noopener">APPLE MUSIC ↗</a> · <a href="https://musicbrainz.org/artist/9ccaca30-60aa-4890-ae6c-ab55225ee274" target="_blank" rel="noopener">MUSICBRAINZ ↗</a></footer>
 </section>
-<section id="info" class="info-overlay" role="dialog" aria-modal="true" aria-label="About the experience" hidden><div class="info-card"><button id="infoClose" class="big-close" aria-label="Close about">✕</button><span class="mono">SYSTEM / INFORMATION</span><h2>IT'S A MUSEUM.<br>NOT A WEBSITE.</h2><p>Journey through seventeen illustrated chapters of LUCKI's career. The visual installations change with every era, and every album sleeve is a record you can discover.</p><p><strong>SCROLL / ↑ ↓ / ← →</strong> — Move through time.<br><strong>DRAG OR MOVE MOUSE</strong> — Look around.<br><strong>CLICK ALBUM ART</strong> — Open the record.<br><strong>HOVER A FLOATING FRAGMENT</strong> — Reveal the song, hear an official preview when available. Click to play if your browser blocks hover audio.<br><strong>ALL ARTWORK</strong> — Browse everything.</p><p class="tiny">Unofficial, independent fan-made project. Covers are displayed as references to official releases and link to streaming pages. The animated environments are original interpretations, not historical photos. Only publicly provided short previews are requested; no complete audio files are hosted.</p><a href="https://music.apple.com/us/artist/lucki/589757880" target="_blank" rel="noopener" class="about-link">VISIT OFFICIAL ARTIST CATALOG ↗</a></div></section>
+<section id="info" class="info-overlay" tabindex="-1" role="dialog" aria-modal="true" aria-label="About the experience" hidden><div class="info-card"><button id="infoClose" class="big-close" aria-label="Close about">✕</button><span class="mono">SYSTEM / INFORMATION</span><h2>IT'S A MUSEUM.<br>NOT A WEBSITE.</h2><p>Journey through seventeen illustrated chapters of LUCKI's career. The visual installations change with every era, and every album sleeve is a record you can discover.</p><p><strong>SCROLL / ↑ ↓ / ← →</strong> — Move through time.<br><strong>DRAG OR MOVE MOUSE</strong> — Look around.<br><strong>CLICK ALBUM ART</strong> — Open the record.<br><strong>SONG EXPLORER</strong> — Open a keyboard-accessible song list. Select Play previews on hover to opt into hover audio. Click or tap a song to play an available sample.<br><strong>ALL ARTWORK</strong> — Browse everything.</p><p><button id="graphicsToggle" class="graphics-toggle" type="button" aria-pressed="false">Use reduced graphics</button></p><p class="tiny">Unofficial, independent fan-made project. Covers are displayed as references to official releases and link to streaming pages. The animated environments are original interpretations, not historical photos. Only publicly provided short previews are requested; no complete audio files are hosted.</p><a href="https://music.apple.com/us/artist/lucki/589757880" target="_blank" rel="noopener" class="about-link">VISIT OFFICIAL ARTIST CATALOG ↗</a></div></section>
 <div id="cursor" class="cursor" aria-hidden="true"></div>
 <div id="announcer" class="sr-only" role="status" aria-live="polite"></div>
 </body>

@@ -10,7 +10,7 @@
 <title>LUCKI — THE ARCHIVE // ENTER THE UNIVERSE</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=DM+Mono:wght@400;500&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=DM+Mono:wght@400;500&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
 <style>
 :root{--bg:#050607;--fg:#eeeee9;--muted:#a5a7a1;--sharp:#d5ee9d;--accent:#cae7c7;--line:rgba(244,244,239,.22);--mono:'DM Mono',monospace;--display:'Archivo Black',Impact,'Arial Black',sans-serif;--body:Inter,Arial,sans-serif}*{box-sizing:border-box}html{background:#050607}body{margin:0;background:#050607;color:var(--fg);font-family:var(--body);min-height:100dvh;overflow:hidden}button,input{font:inherit}button{cursor:pointer}a{color:inherit;text-decoration:none}button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(--sharp);outline-offset:4px}[hidden]{display:none!important}.mono,.eyebrow,.tiny{font-family:var(--mono);letter-spacing:.105em}.mono{font-size:10px;line-height:1.6}.eyebrow{font-size:10px;letter-spacing:.14em}.tiny{font-size:9px;line-height:1.7}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}::selection{background:var(--sharp);color:#040604}
 #scene,.scene-fallback{position:fixed;inset:0;z-index:0}#scene canvas{display:block;width:100%;height:100%}#scene{pointer-events:auto}.scene-fallback{pointer-events:none;overflow:hidden;background:radial-gradient(circle at 60% 36%,#17201d,transparent 40%),radial-gradient(circle at 80% 90%,#281d25,transparent 54%),#070809;perspective:850px}.fallback-halo{position:absolute;inset:14% 16%;background:radial-gradient(ellipse,rgba(179,230,174,.18),transparent 66%);filter:blur(40px)}.fallback-plane{position:absolute;width:min(23vw,350px);aspect-ratio:1;top:29%;right:20%;border:1px solid rgba(219,237,227,.4);box-shadow:0 20px 110px #000,0 0 90px rgba(155,198,178,.1);background:linear-gradient(132deg,#3b4850,#111315 60%,#584e3c);transform:rotateY(-24deg) rotateX(7deg) rotateZ(-5deg);animation:fallbackFloat 8s ease-in-out infinite}.fallback-plane.has-art:before{display:none}.fallback-plane img{display:block;object-fit:cover;width:100%;height:100%}.fallback-plane:before{content:'LUCKI';position:absolute;top:40%;left:7%;font:clamp(17px,3vw,46px) var(--display);color:rgba(235,233,214,.7);letter-spacing:-.1em}.fallback-plane.p2{width:min(14vw,205px);right:8%;top:17%;z-index:-1;transform:rotateY(22deg) rotateZ(13deg);opacity:.65;animation-delay:-2s;background:linear-gradient(145deg,#5d3f51,#1c1826)}.fallback-plane.p3{width:min(12vw,155px);right:44%;top:53%;z-index:-1;opacity:.5;transform:rotateY(30deg) rotateZ(-17deg);animation-delay:-4s;background:linear-gradient(135deg,#383f34,#141d19)}.fallback-floor{position:absolute;bottom:-36%;left:-60%;width:220%;height:90%;transform:rotateX(68deg);background-image:linear-gradient(#75807533 1px,transparent 1px),linear-gradient(90deg,#75807533 1px,transparent 1px);background-size:120px 120px;mask-image:linear-gradient(0deg,black,transparent)}@keyframes fallbackFloat{50%{translate:0 -22px}}.grain,.scanline{position:fixed;inset:0;pointer-events:none;z-index:36}.grain{opacity:.14;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.84' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' opacity='.26' filter='url(%23n)'/%3E%3C/svg%3E");mix-blend-mode:screen}.scanline{opacity:.13;background:repeating-linear-gradient(0deg,transparent,transparent 5px,#000 6px)}
@@ -92,6 +92,54 @@
 .world-song-pager.single-page>div{display:none}.world-song-pager small{letter-spacing:.08em}
 @media(max-width:790px){.artifact-tooltip{display:none}.song-focus{bottom:91px;left:50%;width:min(330px,82vw);padding:13px 15px}.song-focus>strong{font-size:19px}.song-focus>small{font-size:8px}.world-song-pager{right:15px;bottom:145px}.world-song-pager small{display:none}}
 @media(prefers-reduced-motion:reduce){.tooltip-wave b{animation:none}.song-focus{animation:none}}
+
+/* Apple Design Skill implementation: readable controls while preserving the immersive gallery. */
+:root{--label-size:clamp(12px,0.9vw,14px);--body-size:clamp(14px,1.08vw,16px)}
+.mono,.eyebrow,.tiny{font-size:12px;line-height:1.55;letter-spacing:.065em}
+.era-desc,.drawer-describe,.entry-pitch{font-size:var(--body-size);line-height:1.65}
+.era-date,.scene-hint,.chapter-meta,.meta-bracket,.top-center,.entry-lower span,.foot-tip,.world-caption span,.song-number,.track-credit,.preview-meta small,.world-song-pager small,.cover-meta em,.control-top,.songs-heading,.song-focus small,.artifact-tooltip small{font-size:var(--label-size);line-height:1.45}
+.world-caption strong,.song-title,.cover-meta strong,.year-stop,.song-row{font-size:13px}
+button:focus-visible,a:focus-visible,input:focus-visible{outline:3px solid #e4f5bb;outline-offset:4px}
+.year-stop{min-height:36px;min-width:70px;padding:8px 7px;gap:8px}
+.year-stop .dot{width:12px;height:12px}
+.header-link,.header-menu,.cta-main,.cta-next,.world-controls button,.world-song-pager button,.drawer-top button,.big-close,.song-index-toggle,.song-index-heading button,.song-index-album-link{min-height:40px}
+#previewStop,.song-focus button,.drawer-release,.song-row{min-height:40px}
+.song-row:disabled{cursor:default}
+/* Spatial song discovery is optional, accessible song controls are not. */
+.song-index-toggle{position:fixed;z-index:12;top:154px;right:clamp(18px,3vw,50px);padding:10px 17px;border:1px solid #e2e8d85a;background:#101613ee;color:#f1f4ed;font:600 13px/1.4 var(--body);letter-spacing:.025em;box-shadow:0 10px 35px #0008;pointer-events:auto;backdrop-filter:blur(8px)}
+.song-index-toggle[aria-expanded=true],.song-index-toggle:hover{border-color:var(--accent);background:#202c23}
+.song-index-panel{position:fixed;z-index:20;top:205px;right:clamp(18px,3vw,50px);width:min(395px,calc(100vw - 36px));max-height:min(66vh,650px);overflow:auto;padding:20px;background:#0d1413f2;box-shadow:0 22px 85px #000d;border:1px solid #d8e2d17d;backdrop-filter:blur(14px);pointer-events:auto;overscroll-behavior:contain}
+.song-index-heading{display:flex;justify-content:space-between;gap:15px;align-items:flex-start;margin-bottom:15px}
+.song-index-heading .mono{color:var(--accent);font-size:12px}
+.song-index-heading h3{font:700 21px/1.2 var(--body);letter-spacing:-.025em;margin:5px 0 0;max-width:280px}
+.song-index-heading button{min-width:42px;border:1px solid #ffffff55;color:#fff;background:#101b18;font-size:24px}
+.hover-option{display:flex;align-items:center;gap:10px;min-height:44px;color:#e1e6de;font:600 14px/1.3 var(--body);cursor:pointer}
+.hover-option input{accent-color:var(--accent);width:20px;height:20px;flex:none}
+.index-description{color:#cdd3cc;font:13px/1.55 var(--body);margin:4px 0 17px}
+.song-index-list{display:grid;gap:5px}
+.accessible-track{display:grid;grid-template-columns:32px minmax(0,1fr) 37px 21px;align-items:center;gap:10px;width:100%;min-height:47px;padding:10px 9px;border:1px solid transparent;border-bottom-color:#e9f1e929;color:#f3f5ed;text-align:left;background:#ffffff06;cursor:pointer}
+.accessible-track:hover,.accessible-track:focus-visible,.accessible-track.is-playing{border-color:var(--accent);background:#b3daab1a}
+.accessible-track .track-order,.accessible-track .track-length{font:12px var(--mono);color:#b3bcb2}
+.accessible-track .track-title{font:600 14px/1.4 var(--body);overflow-wrap:anywhere}
+.accessible-track>span:last-child{color:var(--accent)}
+.song-index-album-link{width:100%;background:transparent;color:#f2f2eb;border:1px solid #d5ee9d60;padding:10px}
+/* Hide atmospheric marginal labels when there isn't space for both art and controls. */
+@media(max-width:1050px){.foot-tip,.edge-label{display:none}.scene-hint{display:none}.chapter-meta{font-size:12px}}
+@media(max-width:790px){.song-index-toggle{top:78px;right:15px;padding:8px 12px;min-height:44px}.song-index-panel{top:130px;right:12px;max-height:calc(100dvh - 185px);width:min(420px,calc(100vw - 24px))}.year-stop{min-width:0;min-height:44px;padding:8px 3px}.year-stop .dot{width:12px;height:12px}.journey-copy{bottom:145px}.era-desc{font-size:14px}}
+@media(max-width:440px){.song-index-panel{top:132px;max-height:calc(100dvh - 170px)}.song-index-toggle{font-size:12px}.chapter-meta{display:none}.world-song-pager{display:none}.entry-pitch{font-size:14px}}
+@media(hover:none),(pointer:coarse){button,a,[role=button]{touch-action:manipulation}.world-caption,.header-link,.header-menu,.year-stop,.cta-main,.cta-next,.world-controls button,.world-song-pager button{min-height:44px}}
+@media(prefers-contrast:more){.song-index-panel,.drawer,.catalog-overlay,.info-overlay{background:#060807;border-color:#fff}.mono,.eyebrow,.tiny,.era-desc,.index-description{color:#fff}.world-caption,.accessible-track{border-color:#e4f5bb}.year-stop{color:#fff}}
+@media(prefers-reduced-transparency:reduce){.song-index-panel,.song-index-toggle,.drawer,.catalog-overlay,.info-overlay,.world-caption{backdrop-filter:none!important;background:#0a0d0c!important}}
+@media(forced-colors:active){.song-index-panel,.song-index-toggle,.accessible-track,.world-caption{forced-color-adjust:auto;border:1px solid CanvasText}.accessible-track:focus-visible{outline:3px solid Highlight}}
+@media(prefers-reduced-motion:reduce){.song-index-toggle,.song-index-panel,.accessible-track{animation:none!important;transition:none!important}}
+
+/* Remove repeated atmospheric chrome; the album and year provide context already. */
+.edge-label,.meta-bracket{display:none}
+
+.song-index-panel{background:#101612;backdrop-filter:none}
+.graphics-toggle{min-height:44px;border:1px solid var(--sharp);background:#131a17;color:#edf4ea;padding:10px 16px;font:600 14px/1.4 var(--body)}
+.graphics-toggle[aria-pressed=true]{background:#d5ee9d;color:#091009}
+@media(max-width:790px){.chapter-meta .mono,.world-song-pager .mono,.year-stop span,.entry-lower .mono{font-size:12px}}
 
 </style>
 <!-- Independent boot watchdog: even a missing browser feature cannot permanently cover the archive. -->
@@ -198,6 +246,13 @@ const app={index:0,entered:false,drawer:false,detail:null,catalog:false,info:fal
 const albumTracks=new Map(), trackRequests=new Map();
 const previewAudio=new Audio();previewAudio.preload='none';previewAudio.volume=.72;
 let previewSequence=0, playingRow=null, activePreviewTrack=null, previewPinned=false;
+let hoverPreviewsEnabled=false;
+try{hoverPreviewsEnabled=localStorage.getItem('lucki-archive-hover-previews')==='yes'}catch{}
+let activeModal=null, modalReturnFocus=null;
+let reducedGraphics=Boolean(navigator.deviceMemory&&navigator.deviceMemory<=4);
+try{const savedQuality=localStorage.getItem('lucki-archive-reduced-graphics');if(savedQuality!==null)reducedGraphics=savedQuality==='yes'}catch{}
+
+
 try{app.favorites=new Set(JSON.parse(localStorage.getItem('lucki-archive-saved-v2')||'[]'))}catch{}
 
 function escapeHTML(input){return String(input??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
@@ -212,7 +267,7 @@ function officialRelease(r){const best=app.imageTargets.get(r.id);return best?.l
 function timeLabel(milliseconds){if(!Number.isFinite(milliseconds)||milliseconds<=0)return '—';const n=Math.round(milliseconds/1000);return Math.floor(n/60)+':'+String(n%60).padStart(2,'0')}
 function fallbackTracks(r){return r.id==='last-laugh'?TRACKS.map((t,i)=>({name:t.name,duration:t.duration,number:i+1,previewUrl:null,context:t.context||''})):r.id==='son-of-sam'?SON_OF_SAM_TRACKS.map((t,i)=>({name:t.name,duration:t.duration,number:i+1,previewUrl:null,context:''})):[]}
 function trackRows(r){return albumTracks.get(r.id)||fallbackTracks(r)}
-function stopPreview(){previewPinned=false;previewSequence++;previewAudio.pause();playingRow=null;activePreviewTrack=null;document.querySelectorAll('.song-row.is-playing').forEach(el=>el.classList.remove('is-playing'));const hud=$('#previewHud');if(hud)hud.hidden=true}
+function stopPreview(){previewPinned=false;previewSequence++;previewAudio.pause();playingRow=null;activePreviewTrack=null;document.querySelectorAll('.song-row.is-playing').forEach(el=>el.classList.remove('is-playing'));const hud=$('#previewHud');if(hud)hud.hidden=true;document.querySelectorAll('.accessible-track.is-playing').forEach(el=>el.classList.remove('is-playing'))}
 previewAudio.addEventListener('ended',stopPreview);
 function showPreviewStatus(song,status){$('#previewHud').hidden=false;$('#previewSong').textContent=song;$('#previewStatus').textContent=status}
 async function startPreview(track,row){
@@ -225,7 +280,7 @@ async function startPreview(track,row){
  try{
   await previewAudio.play();
   if(request!==previewSequence){previewAudio.pause();return}
-  row.classList.add('is-playing');showPreviewStatus(track.name,previewPinned?'◉ PREVIEW PINNED · PRESS STOP TO END':'◉ PLAYING SHORT PREVIEW · HOVER OFF TO STOP');
+  row.classList.add('is-playing');document.querySelectorAll('.accessible-track').forEach(el=>el.classList.toggle('is-playing',el.dataset.previewUrl===track.previewUrl));showPreviewStatus(track.name,previewPinned?'◉ PREVIEW PINNED · PRESS STOP TO END':'◉ PLAYING SHORT PREVIEW · HOVER OFF TO STOP');
  }catch(e){
   if(request!==previewSequence)return;
   activePreviewTrack=null;row.classList.remove('is-playing');
@@ -237,9 +292,9 @@ async function startPreview(track,row){
 function bindSongRows(){
  $$('#drawerContent .song-row').forEach(row=>{
   const id=row.dataset.release, idx=Number(row.dataset.track);const release=RELEASES.find(r=>r.id===id);
-  const track=release&&trackRows(release)[idx];if(!track||!track.previewUrl)return;
-  row.addEventListener('mouseenter',()=>{void startPreview(track,row)});
-  row.addEventListener('mouseleave',()=>{if(playingRow===row||activePreviewTrack===track.previewUrl)stopPreview()});
+  const track=release&&trackRows(release)[idx];if(!track)return;if(!track.previewUrl){row.setAttribute('aria-label',track.name+', preview unavailable. Open official release.');row.addEventListener('click',()=>window.open(officialRelease(release),'_blank','noopener,noreferrer'));return}
+  row.addEventListener('mouseenter',()=>{if(hoverPreviewsEnabled)void startPreview(track,row)});
+  row.addEventListener('mouseleave',()=>{if(hoverPreviewsEnabled&&!previewPinned&&(playingRow===row||activePreviewTrack===track.previewUrl))stopPreview()});
   row.addEventListener('click',()=>{if(playingRow===row&&!previewAudio.paused){stopPreview()}else void startPreview(track,row)});
   row.addEventListener('focus',()=>{row.dataset.focus='true'});
  });
@@ -247,7 +302,7 @@ function bindSongRows(){
 async function loadAlbumTracks(release){
  if(albumTracks.has(release.id))return albumTracks.get(release.id);
  if(trackRequests.has(release.id))return trackRequests.get(release.id);
- if(!release.appleId){const rows=fallbackTracks(release);albumTracks.set(release.id,rows);app.world?.setTracks(release.id,rows);return rows}
+ if(!release.appleId){const rows=fallbackTracks(release);albumTracks.set(release.id,rows);app.world?.setTracks(release.id,rows);if(app.index===ERAS.findIndex(e=>e.id===release.era)&&$('#songIndexPanel')&&!$('#songIndexPanel').hidden)renderSongIndex();return rows}
  const promise=(async()=>{
   let rows=[];
   try{
@@ -270,6 +325,7 @@ async function loadAlbumTracks(release){
   if(!rows.length)rows=fallbackTracks(release);
   albumTracks.set(release.id,rows);
   app.world?.setTracks(release.id,rows);
+  if(app.index===ERAS.findIndex(e=>e.id===release.era)&&!$('#songIndexPanel').hidden)renderSongIndex();
   if(app.drawer&&app.detail===release.id)renderDrawer();
   return rows;
  })();
@@ -279,8 +335,54 @@ async function loadAlbumTracks(release){
 function songListHTML(r){
  const list=trackRows(r),isLoading=trackRequests.has(r.id);
  if(!list.length)return `<section class="track-list"><div class="songs-heading"><span>TRACK INDEX</span><small>${isLoading?'FETCHING OFFICIAL TRACKLIST…':'TRACKLIST UNAVAILABLE'}</small></div><p class="track-empty">${isLoading?'Loading tracks from Apple Music…':'This release is not currently returned by the music catalog. Open its official listing to browse songs.'}</p></section>`;
- return `<section class="track-list"><div class="songs-heading"><span>TRACK INDEX / ${String(list.length).padStart(2,'0')}</span><small>HOVER TO HEAR · CLICK TO PLAY</small></div><div class="songs-grid">${list.map((track,i)=>`<button type="button" class="song-row" data-release="${escapeHTML(r.id)}" data-track="${i}" ${track.previewUrl?'': 'disabled'} title="${track.previewUrl?'Hover or click to play preview':'Preview not available for this track'}"><span class="song-number">${String(track.number||i+1).padStart(2,'0')}</span><span class="song-title">${escapeHTML(track.name)}${track.context?`<small>${escapeHTML(track.context)}</small>`:''}</span><span class="song-duration">${escapeHTML(track.duration||'—')}</span><span class="song-play">${track.previewUrl?'▶':'—'}</span></button>`).join('')}</div><p class="track-credit">${list.some(t=>t.previewUrl)?'Audio is a short, official catalog preview. Some tracks are unavailable.':'Tracklist verified; official playback previews are not available here. Use the streaming link above.'}</p></section>`;
+ return `<section class="track-list"><div class="songs-heading"><span>TRACK INDEX / ${String(list.length).padStart(2,'0')}</span><small>CLICK TO PLAY · OPTIONAL HOVER</small></div><div class="songs-grid">${list.map((track,i)=>`<button type="button" class="song-row" data-release="${escapeHTML(r.id)}" data-track="${i}" title="${track.previewUrl?'Hover or click to play preview':'No preview; open the official release'}"><span class="song-number">${String(track.number||i+1).padStart(2,'0')}</span><span class="song-title">${escapeHTML(track.name)}${track.context?`<small>${escapeHTML(track.context)}</small>`:''}</span><span class="song-duration">${escapeHTML(track.duration||'—')}</span><span class="song-play">${track.previewUrl?'▶':'↗'}</span></button>`).join('')}</div><p class="track-credit">${list.some(t=>t.previewUrl)?'Audio is a short, official catalog preview. Some tracks are unavailable.':'Tracklist verified; official playback previews are not available here. Use the streaming link above.'}</p></section>`;
 }
+
+
+// Accessible equivalent to the spatial WebGL relics. The 3D layer is decorative for assistive technology.
+function syncHoverChoice(){const input=$('#hoverPreviewOptIn');if(input)input.checked=hoverPreviewsEnabled;
+ const note=$('#hoverPreviewNote');if(note)note.textContent=hoverPreviewsEnabled?'Hover audio enabled. Move away to stop. Click a song to pin a preview.':'Hover audio is off. Click a song to play a short official preview.';
+}
+function showSongIndex(force){const panel=$('#songIndexPanel'),button=$('#songIndexToggle');if(!panel||!button)return;
+ const open=force===undefined?panel.hidden:Boolean(force);panel.hidden=!open;button.setAttribute('aria-expanded',String(open));
+ if(open){renderSongIndex();syncHoverChoice();$('#songIndexClose').focus({preventScroll:true})}
+ else {app.world?.highlightTrack(-1);if(panel.contains(document.activeElement))button.focus({preventScroll:true})}
+}
+function renderSongIndex(){const root=$('#songIndexList');if(!root)return;
+ const release=eraReleaseList(app.index)[0];$('#songIndexHeading').textContent=release?release.title:'This era';
+ if(!release){root.textContent='No songs in this era.';return}
+ const tracks=trackRows(release);
+ if(!tracks.length){root.innerHTML='<p class="index-description">Loading the release tracklist, or this release is not available in the music catalog. You can still open its album.</p><button class="song-index-album-link" type="button">Open album details ↗</button>';root.querySelector('button')?.addEventListener('click',()=>openDrawer(release.id));return}
+ root.innerHTML=tracks.map((t,i)=>`<button type="button" class="accessible-track" data-track="${i}" data-preview-url="${escapeHTML(t.previewUrl||'')}" aria-label="${escapeHTML(t.name)}, track ${i+1}. ${t.previewUrl?'Play available short preview':'Preview unavailable; open album details'}"><span class="track-order">${String(i+1).padStart(2,'0')}</span><span class="track-title">${escapeHTML(t.name)}</span><span class="track-length">${escapeHTML(t.duration||'—')}</span><span aria-hidden="true">${t.previewUrl?'▶':'↗'}</span></button>`).join('');
+ for(const button of root.querySelectorAll('.accessible-track')){
+  const i=Number(button.dataset.track),track=tracks[i];
+  button.addEventListener('focus',()=>app.world?.highlightTrack(i));
+  button.addEventListener('blur',()=>app.world?.highlightTrack(-1));
+  button.addEventListener('mouseenter',()=>{app.world?.highlightTrack(i);if(hoverPreviewsEnabled&&track.previewUrl)void startPreview(track,button)});
+  button.addEventListener('mouseleave',()=>{app.world?.highlightTrack(-1);if(hoverPreviewsEnabled&&!previewPinned&&activePreviewTrack===track.previewUrl)stopPreview()});
+  button.addEventListener('click',()=>{if(!track.previewUrl){openDrawer(release.id);return}if(activePreviewTrack===track.previewUrl&&!previewAudio.paused){stopPreview()}else {previewPinned=true;void startPreview(track,button)}});
+ }
+}
+
+// A single modal is active at a time. Hide inactive controls from keyboard navigation.
+function modalBackground(inactive){for(const selector of ['#topbar','#yearRail','#experience','#worldLabels','#songIndexToggle']){
+ const node=$(selector);if(node)node.inert=inactive;
+}}
+function openDialog(node,focusElement){if(!activeModal){modalReturnFocus=document.activeElement instanceof HTMLElement?document.activeElement:null}
+ activeModal=node;node.inert=false;node.hidden=false;modalBackground(true);(focusElement||node).focus({preventScroll:true});
+}
+function closeDialog(node){if(activeModal!==node)return;node.inert=true;modalBackground(false);activeModal=null;
+ const original=modalReturnFocus;modalReturnFocus=null;
+ if(original?.isConnected&&!original.closest('[hidden]')&&!original.inert)original.focus({preventScroll:true});
+ else $('#songIndexToggle')?.focus({preventScroll:true});
+}
+document.addEventListener('keydown',event=>{if(!activeModal||event.key!=='Tab')return;
+ const elements=[...activeModal.querySelectorAll('button:not([disabled]),a[href],input:not([disabled]),select:not([disabled]),[tabindex]:not([tabindex="-1"])')].filter(el=>!el.hidden&&el.getClientRects().length);
+ if(!elements.length){event.preventDefault();activeModal.focus();return}
+ const first=elements[0],last=elements[elements.length-1];
+ if(event.shiftKey&&(document.activeElement===first||document.activeElement===activeModal)){event.preventDefault();last.focus()}
+ else if(!event.shiftKey&&(document.activeElement===last||document.activeElement===activeModal)){event.preventDefault();first.focus()}
+},true);
 
 function eraReleaseList(index){const id=ERAS[index].id;return RELEASES.filter(r=>r.era===id).sort((a,b)=>(a.id===id?-1:0)-(b.id===id?-1:0))}
 // Load official release tracks as visitors walk into a new 3D room.
@@ -298,12 +400,12 @@ function updateEraUI(){const e=ERAS[app.index];document.documentElement.style.se
 function createRail(){$('#yearRail').innerHTML=ERAS.map((e,i)=>`<button class="year-stop ${i===0?'active':''}" data-era="${i}" aria-label="Go to ${e.title}, ${e.year}" title="${escapeHTML(e.title)}"><span class="dot"></span><span>${String(i+1).padStart(2,'0')}</span></button>`).join('');$$('.year-stop').forEach(el=>el.addEventListener('click',()=>goTo(Number(el.dataset.era))))}
 
 let travelTimer=null;
-function goTo(index,{instant=false}={}){stopPreview();const next=clamp(index,0,ERAS.length-1);if(next===app.index&&!instant)return;if(app.catalog||app.info)return;closeDrawer();const distance=Math.abs(next-app.index);app.index=next;updateEraUI();warmEraSongs(next);if(app.world)app.world.setEra(next,instant);if(!prefersReduced&&!instant&&distance>1){const w=$('#wipe');$('#wipeYear').textContent=ERAS[next].year.split('—')[0];w.classList.remove('in');void w.offsetWidth;w.classList.add('in');clearTimeout(travelTimer);travelTimer=setTimeout(()=>w.classList.remove('in'),1000)} }
+function goTo(index,{instant=false}={}){stopPreview();const next=clamp(index,0,ERAS.length-1);if(next===app.index&&!instant)return;if(app.catalog||app.info)return;closeDrawer();const distance=Math.abs(next-app.index);app.index=next;updateEraUI();warmEraSongs(next);if(!$('#songIndexPanel').hidden)renderSongIndex();if(app.world)app.world.setEra(next,instant);if(!prefersReduced&&!instant&&distance>1){const w=$('#wipe');$('#wipeYear').textContent=ERAS[next].year.split('—')[0];w.classList.remove('in');void w.offsetWidth;w.classList.add('in');clearTimeout(travelTimer);travelTimer=setTimeout(()=>w.classList.remove('in'),1000)} }
 function next(){if(app.entered)goTo(app.index+1)}
 function previous(){if(app.entered)goTo(app.index-1)}
 
-function openDrawer(id){stopPreview();const r=id?RELEASES.find(r=>r.id===id):null;app.drawer=true;app.detail=r?.id||null;renderDrawer();$('#drawer').classList.add('open');$('#drawer').setAttribute('aria-hidden','false');$('#drawerClose').focus({preventScroll:true})}
-function closeDrawer(){stopPreview();app.drawer=false;$('#drawer').classList.remove('open');$('#drawer').setAttribute('aria-hidden','true')}
+function openDrawer(id){stopPreview();const r=id?RELEASES.find(r=>r.id===id):null;app.drawer=true;app.detail=r?.id||null;renderDrawer();$('#drawer').classList.add('open');$('#drawer').setAttribute('aria-hidden','false');openDialog($('#drawer'),$('#drawerClose'))}
+function closeDrawer(){if(!app.drawer)return;stopPreview();app.drawer=false;$('#drawer').classList.remove('open');$('#drawer').setAttribute('aria-hidden','true');closeDialog($('#drawer'))}
 function renderDrawer(){if(playingRow)stopPreview();const era=ERAS[app.index];const rs=eraReleaseList(app.index);const target=RELEASES.find(r=>r.id===app.detail);
  if(target){const saved=app.favorites.has(target.id);const trackHtml=songListHTML(target);
  $('#drawerContent').innerHTML=`<button class="back-link" id="backToEra">← BACK TO ERA ${String(app.index+1).padStart(2,'0')}</button><p class="drawer-era-index mono">OFFICIAL RELEASE / ${target.year} / ${escapeHTML(target.type.toUpperCase())}</p><div class="record-detail"><div class="hero-cover">${coverCard(target)}</div><h3>${escapeHTML(target.title)}</h3><p>${escapeHTML(target.notes)}</p><a class="record-link" href="${escapeHTML(officialRelease(target))}" target="_blank" rel="noopener noreferrer">OPEN OFFICIAL MUSIC LISTING ↗</a><p><button id="favoriteButton" class="back-link">${saved?'★ SAVED TO YOUR ARCHIVE':'☆ SAVE TO YOUR ARCHIVE'}</button></p>${trackHtml}<p class="drawer-note">Official cover imagery appears when a public music-catalog preview is available. Recording periods are not inferred from release dates.</p></div>`;
@@ -314,16 +416,16 @@ function renderDrawer(){if(playingRow)stopPreview();const era=ERAS[app.index];co
  $$('.drawer-release').forEach(b=>b.addEventListener('click',()=>{app.detail=b.dataset.record;renderDrawer()}));}
 }
 function renderCatalog(){const needle=$('#catalogSearch').value.trim().toLowerCase();const found=RELEASES.filter(r=>(r.title+' '+r.year+' '+r.type+' '+(ERAS.find(e=>e.id===r.era)?.short||'')).toLowerCase().includes(needle));$('#catalogCount').textContent=found.length+' RECORDS FOUND';$('#catalogGrid').innerHTML=found.map(r=>`<button class="catalog-item" data-record="${r.id}" title="Travel to ${escapeHTML(r.title)}">${coverCard(r)}<span class="cover-meta"><strong>${escapeHTML(r.title)}</strong><em>${r.year} ↗</em></span></button>`).join('')||'<p class="mono">NO MATCHING RELEASES. TRY A DIFFERENT SEARCH.</p>';$$('.catalog-item').forEach(el=>el.addEventListener('click',()=>{const r=RELEASES.find(x=>x.id===el.dataset.record);if(!r)return;closeCatalog();goTo(ERAS.findIndex(e=>e.id===r.era),{instant:true});openDrawer(r.id)}))}
-function openCatalog() {stopPreview();closeDrawer();app.catalog=true;$('#catalog').hidden=false;renderCatalog();$('#catalogSearch').focus({preventScroll:true})}
-function closeCatalog(){app.catalog=false;$('#catalog').hidden=true}
-function openInfo(){stopPreview();closeDrawer();app.info=true;$('#info').hidden=false;$('#infoClose').focus({preventScroll:true})}
-function closeInfo(){app.info=false;$('#info').hidden=true}
+function openCatalog() {stopPreview();closeDrawer();app.catalog=true;renderCatalog();openDialog($('#catalog'),$('#catalogSearch'))}
+function closeCatalog(){if(!app.catalog)return;app.catalog=false;closeDialog($('#catalog'));$('#catalog').hidden=true}
+function openInfo(){stopPreview();closeDrawer();app.info=true;openDialog($('#info'),$('#infoClose'))}
+function closeInfo(){if(!app.info)return;app.info=false;closeDialog($('#info'));$('#info').hidden=true}
 
 // A curated collection ID per release prevents false matches from lookalike album names.
 // The browser only embeds preview-size artwork from the official catalog; nothing is uploaded here.
 async function fetchJson(url,timeout=6500){const controller=new AbortController();const t=setTimeout(()=>controller.abort(),timeout);try{const response=await fetch(url,{signal:controller.signal});if(!response.ok)throw Error(`HTTP ${response.status}`);return await response.json()}finally{clearTimeout(t)}}
 function artworkLarge(url){return String(url).replace(/\d+x\d+bb(?=\.)/,'600x600bb').replace(/\d+x\d+(?=\.)/,'600x600')}
-function addArtwork(r,url,link){if(!/^https:\/\//.test(url))return;const finalUrl=artworkLarge(url);app.coverUrls.set(r.id,finalUrl);if(link)app.imageTargets.set(r.id,{link});app.world?.addCover(r.id,finalUrl);if(app.drawer)renderDrawer();if(app.catalog)renderCatalog();updateFallbackArt()}
+function addArtwork(r,url,link){if(!/^https:\/\//.test(url))return;const finalUrl=artworkLarge(url);app.coverUrls.set(r.id,finalUrl);if(link)app.imageTargets.set(r.id,{link});app.world?.addCover(r.id,finalUrl);if(app.drawer&&!$('#drawer').contains(document.activeElement))renderDrawer();if(app.catalog)renderCatalog();updateFallbackArt()}
 async function loadCovers(){if(app.loadingCovers)return;app.loadingCovers=true;
  // An independently verified Spotify cover is used for Son of Sam, which isn't in Apple's main catalog.
  for(const r of RELEASES)if(r.cover)addArtwork(r,r.cover,r.url);
@@ -348,7 +450,7 @@ async function loadCovers(){if(app.loadingCovers)return;app.loadingCovers=true;
 function createLabelCanvas(text,subtitle,color='#d7e6d8',width=512,height=256){const c=document.createElement('canvas');c.width=width;c.height=height;const x=c.getContext('2d');x.fillStyle='#090b0ccf';x.fillRect(0,0,width,height);x.strokeStyle=color;x.globalAlpha=.5;x.lineWidth=2;x.strokeRect(9,9,width-18,height-18);x.globalAlpha=1;x.fillStyle=color;x.font=`bold ${Math.round(width*.095)}px Impact, Arial Black, sans-serif`;let words=String(text).toUpperCase().split(' ');let lines=[];let line='';for(const w of words){const test=line?line+' '+w:w;if(x.measureText(test).width>width-65&&line){lines.push(line);line=w}else line=test}lines.push(line);lines.slice(0,3).forEach((l,i)=>x.fillText(l,30,Math.max(90,126-(lines.length-1)*22)+i*57));x.font=`${Math.round(width*.027)}px monospace`;x.fillStyle='#d4dbcb';x.fillText(String(subtitle).slice(0,46).toUpperCase(),30,height-29);return c}
 
 async function initWorld(){let THREE;try{THREE=await import('https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.module.js')}catch(err){console.warn('3D engine unavailable; fallback gallery stays accessible.',err);return null}
- const host=$('#scene');let renderer;try{renderer=new THREE.WebGLRenderer({antialias:!touchScreen,alpha:true,powerPreference:'high-performance'});renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,touchScreen?1.4:1.8));renderer.setSize(innerWidth,innerHeight);renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.25;host.appendChild(renderer.domElement)}catch(err){console.warn('WebGL initialization failed',err);return null}
+ const host=$('#scene');let renderer;try{renderer=new THREE.WebGLRenderer({antialias:!touchScreen,alpha:true,powerPreference:'high-performance'});renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,reducedGraphics?1:(touchScreen?1.25:1.5)));renderer.setSize(innerWidth,innerHeight);renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.25;host.appendChild(renderer.domElement)}catch(err){console.warn('WebGL initialization failed',err);return null}
  $('#sceneFallback').style.display='none';app.rendererOkay=true;
  const scene=new THREE.Scene();scene.background=new THREE.Color('#050607');scene.fog=new THREE.FogExp2('#050607',.017);
  const camera=new THREE.PerspectiveCamera(touchScreen?68:52,innerWidth/innerHeight,.08,430);const G=39;const centerZ=i=>-i*G;
@@ -374,7 +476,7 @@ async function initWorld(){let THREE;try{THREE=await import('https://cdn.jsdeliv
   [7.9,8.3,-7.9],[7.65,.35,-5.15],[11.25,7.65,-8.8],[3.95,4.8,-6.4],
   [6.25,4.8,-8.5],[10.9,-.5,-7.1],[3.45,8.7,-9.5],[9.55,8.85,-12]
  ];
- function addParticles(group,col,num=80){const arr=new Float32Array(num*3);for(let i=0;i<num;i++){arr[i*3]=(Math.random()-.5)*22;arr[i*3+1]=Math.random()*15-3;arr[i*3+2]=(Math.random()-.5)*25;}const geom=new THREE.BufferGeometry();geom.setAttribute('position',new THREE.BufferAttribute(arr,3));const pts=new THREE.Points(geom,new THREE.PointsMaterial({color:col,size:touchScreen?.05:.064,transparent:true,opacity:.65,depthWrite:false,sizeAttenuation:true}));group.add(pts);animations.push({obj:pts,spin:.001,kind:'particle'})}
+ function addParticles(group,col,num=80){const arr=new Float32Array(num*3);for(let i=0;i<num;i++){arr[i*3]=(Math.random()-.5)*22;arr[i*3+1]=Math.random()*15-3;arr[i*3+2]=(Math.random()-.5)*25;}const geom=new THREE.BufferGeometry();geom.setAttribute('position',new THREE.BufferAttribute(arr,3));const pts=new THREE.Points(geom,new THREE.PointsMaterial({color:col,size:touchScreen?.05:.064,transparent:true,opacity:.65,depthWrite:false,sizeAttenuation:true}));group.add(pts);pts.visible=!reducedGraphics;animations.push({obj:pts,spin:.001,kind:'particle'})}
  function arch(group,z,col){const tmat=new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:.38,depthWrite:false});addBox(group,[.09,11,.09],[-9,2,z],tmat);addBox(group,[.09,11,.09],[9,2,z],tmat);addBox(group,[18,.09,.09],[0,7.5,z],tmat)}
  function giveArtworkMesh(group,r,pos,size,i){const holder=new THREE.Group();holder.position.set(...pos);holder.rotation.y=[.12,-.17,.2][i%3];group.add(holder);const [w,h]=size;const artMat=new THREE.MeshBasicMaterial({color:'#ffffff',side:THREE.DoubleSide});let c=createLabelCanvas(r.title,`${r.year} / ARCHIVE RECORD — SELECT TO VIEW`,ERAS[active].accent,512,512);const placeholder=new THREE.CanvasTexture(c);placeholder.colorSpace=THREE.SRGBColorSpace;artMat.map=placeholder;const art=new THREE.Mesh(new THREE.PlaneGeometry(w,h),artMat);art.position.z=.14;art.userData={releaseId:r.id,eraIndex:active};holder.add(art);interactive.push(art);frame(holder,w+.18,h+.18,.1);
  addBox(holder,[w+.25,h+.25,.13],[0,0,-.025],mat('#151718',.7,.55));
@@ -480,6 +582,13 @@ async function initWorld(){let THREE;try{THREE=await import('https://cdn.jsdeliv
   if(eraIndex<0)return;const rack=songRacks.get(eraIndex);
   if(rack&&rack.releaseId===releaseId&&eraIndex===app.index&&app.entered)drawSongRack(eraIndex);
  }
+ let keyboardHighlighted=-1;
+ function highlightTrack(i){keyboardHighlighted=i;
+  const rack=songRacks.get(app.index);if(!rack)return;
+  if(i>=0){const perPage=app.index===ERAS.length-1?12:8;const page=Math.floor(i/perPage);
+   if(page!==rack.page){rack.page=page;drawSongRack(app.index)}
+  }
+ }
  function clearArtifactFocus(){focusedWorldSong=null;const panel=$('#songFocus');if(panel)panel.hidden=true;if(previewPinned)stopPreview()}
  function focusArtifact(hit){if(focusedWorldSong===hit){clearArtifactFocus();return}
   focusedWorldSong=hit;const data=hit.userData,t=data.trackSong;
@@ -497,13 +606,13 @@ async function initWorld(){let THREE;try{THREE=await import('https://cdn.jsdeliv
  function showArtifactTooltip(mesh,e){const tip=$('#artifactTooltip'),t=mesh.userData.trackSong;
   $('#artifactTooltipIndex').textContent=`MEMORY ${String(mesh.userData.trackNumber).padStart(2,'0')}`;
   $('#artifactTooltipTitle').textContent=t.name;
-  $('#artifactTooltipMeta').textContent=t.previewUrl?'◉ HOVER TO LISTEN · CLICK TO HOLD':'◌ PREVIEW UNAVAILABLE · CLICK TO INSPECT';
+  $('#artifactTooltipMeta').textContent=t.previewUrl?(hoverPreviewsEnabled?'◉ HOVER PREVIEW · CLICK TO HOLD':'◉ CLICK TO PLAY PREVIEW'):'◌ PREVIEW UNAVAILABLE · CLICK TO INSPECT';
   tip.hidden=false;tip.style.left=Math.min(innerWidth-260,Math.max(14,e.clientX+20))+'px';
   tip.style.top=Math.min(innerHeight-152,Math.max(94,e.clientY-80))+'px';
  }
  function handleWorldSongHover(hit,e){const mesh=hit?.object?.userData?.trackSong?hit.object:null;
   if(mesh!==hoveredWorldSong){clearWorldSongHover();hoveredWorldSong=mesh;
-   if(!previewPinned&&mesh?.userData.trackSong?.previewUrl){const track=mesh.userData.trackSong;
+   if(hoverPreviewsEnabled&&!previewPinned&&mesh?.userData.trackSong?.previewUrl){const track=mesh.userData.trackSong;
     worldSongHoverTimer=setTimeout(()=>{if(hoveredWorldSong===mesh&&app.entered&&!app.drawer&&!app.catalog&&!app.info)void startPreview(track,worldRow)},260);
    }
   }
@@ -540,13 +649,20 @@ async function initWorld(){let THREE;try{THREE=await import('https://cdn.jsdeliv
  const hiddenName=worldText(group,ERAS[i].short,`${ERAS[i].year}  //  ${ERAS[i].visual}`,color,[5.7,8,-8],[6.5,2.4]);hiddenName.rotation.y=-.2;
  addParticles(group,color,touchScreen?38:88);
  }
- for(let i=0;i<ERAS.length;i++){active=i;const stage=new THREE.Group();stage.position.z=centerZ(i);world.add(stage);groups.push(stage);const releases=eraReleaseList(i);stageEnvironment(stage,i,ERAS[i].accent);if(i===ERAS.length-1){giveArtworkMesh(stage,releases[0],[1.45,5.6,-4.4],[3.45,3.45],0)}else releases.slice(0,4).forEach((r,j)=>{const hasMany=releases.length>2;const x=[2.05,5.3,-1.25,7.8][j];const y=[3.15,4.8,5.2,1.45][j];const z=[1.1,-1.8,-4.2,-3.1][j];giveArtworkMesh(stage,r,[x,y,z],[hasMany?2.55:3.7,hasMany?2.55:3.7],j)});
- // Original short archival title on each stage floor
- worldText(stage,`${String(i+1).padStart(2,'0')} / ${ERAS[i].start}`,ERAS[i].tag,ERAS[i].accent,[-6,-1.0,-4],[3,1.3]).rotation.y=.19;
+ // Build only the entered era. Heavy scene geometry and song racks are created on demand.
+ const builtStages=new Set();
+ for(let i=0;i<ERAS.length;i++){const stage=new THREE.Group();stage.position.z=centerZ(i);world.add(stage);groups.push(stage)}
+ function buildStage(i){if(i<0||i>=ERAS.length||builtStages.has(i))return;
+  const oldActive=active,stage=groups[i],firstAnimation=animations.length;active=i;
+  const releases=eraReleaseList(i);stageEnvironment(stage,i,ERAS[i].accent);
+  if(i===ERAS.length-1){if(releases[0])giveArtworkMesh(stage,releases[0],[1.45,5.6,-4.4],[3.45,3.45],0)}
+  else releases.slice(0,4).forEach((r,j)=>{const hasMany=releases.length>2;const x=[2.05,5.3,-1.25,7.8][j];const y=[3.15,4.8,5.2,1.45][j];const z=[1.1,-1.8,-4.2,-3.1][j];giveArtworkMesh(stage,r,[x,y,z],[hasMany?2.55:3.7,hasMany?2.55:3.7],j)});
+  worldText(stage,`${String(i+1).padStart(2,'0')} / ${ERAS[i].start}`,ERAS[i].tag,ERAS[i].accent,[-6,-1.0,-4],[3,1.3]).rotation.y=.19;
+  if(releases[0])makeSongRack(stage,i,releases[0]);
+  animations.slice(firstAnimation).forEach(v=>v.eraIndex=i);
+  builtStages.add(i);active=oldActive;
  }
- // Add individually selectable song artifacts to the active gallery space.
- for(let i=0;i<ERAS.length;i++){const release=eraReleaseList(i)[0];if(release)makeSongRack(groups[i],i,release)}
- active=0;
+ buildStage(0);active=0;
  function updateTexture(id,url){const m=textureTargets.get(id);if(!m)return;textureLoader.load(url,tex=>{if(disposed)return;tex.colorSpace=THREE.SRGBColorSpace;tex.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());m.material.map=tex;m.material.color.set('#ffffff');m.material.needsUpdate=true;albumCoverTextures.set(id,tex);const rack=songRacks.get(app.index);if(rack&&rack.releaseId===id){for(const photo of rack.photos){const copy=tex.clone();copy.needsUpdate=true;photo.material.map=copy;photo.material.color.set('#ffffff');photo.material.needsUpdate=true}}},undefined,()=>{console.info('3D artwork image unavailable for '+id)})}
  const onPointerMove=(e)=>{pointerX=(e.clientX/innerWidth-.5)*2;pointerY=(e.clientY/innerHeight-.5)*2;if(dragging){dragOffset=clamp(dragOffset+(e.clientX-dragLastX)*.011,-2.6,2.6);dragLastX=e.clientX;wasClicked=true;clearWorldSongHover()}if(app.entered&&!app.drawer&&!app.catalog&&!app.info&&!dragging){const hit=pick(e);handleWorldSongHover(hit,e);$('#hotspot').classList.toggle('show',Boolean(hit));$('#hotspot').style.left=e.clientX+'px';$('#hotspot').style.top=e.clientY+'px';const track=hit?.object.userData.trackSong;$('#hotspot').classList.toggle('show',Boolean(hit)&&!track);$('#hotspot').textContent=track?'':hit?'INSPECT ALBUM ARTWORK ↗':'';renderer.domElement.style.cursor=hit?'pointer':'grab';}else if(!app.entered)clearWorldSongHover();}
  const raycaster=new THREE.Raycaster(),ndc=new THREE.Vector2();
@@ -554,12 +670,12 @@ async function initWorld(){let THREE;try{THREE=await import('https://cdn.jsdeliv
  const onPointerDown=e=>{if(e.button!==0)return;wasClicked=false;dragging=true;dragLastX=e.clientX};const onPointerUp=e=>{dragging=false;if(wasClicked||!app.entered||app.catalog||app.drawer||app.info)return;const hit=pick(e);if(!hit)return;const target=hit.object.userData;const song=target.trackSong;if(song){if(focusedWorldSong===hit.object){clearArtifactFocus();return}focusArtifact(hit.object);if(song.previewUrl){previewPinned=true;if(activePreviewTrack===song.previewUrl&&!previewAudio.paused)showPreviewStatus(song.name,'◉ PREVIEW PINNED · PRESS STOP TO END');else void startPreview(song,worldRow)}return}if(target.releaseId)openDrawer(target.releaseId);else if(target.trackIndex!==undefined)openDrawer('last-laugh')};
  renderer.domElement.addEventListener('pointermove',onPointerMove,{passive:true});renderer.domElement.addEventListener('pointerleave',clearWorldSongHover);renderer.domElement.addEventListener('pointerdown',onPointerDown);window.addEventListener('pointerup',onPointerUp);
  let frames=0,rafId=0;camera.position.set(0,2.6,targetCameraZ);camera.lookAt(1.8,2.3,centerZ(0)-3);
- function animate(){if(disposed)return;rafId=requestAnimationFrame(animate);const dt=Math.min(clock.getDelta(),.05);motion+=dt;const targetX=(pointerX*.55)+dragOffset;dragOffset*=.984;const vx=targetX+Math.sin(motion*.18)*.13;const destZ=targetCameraZ;groups.forEach((g,j)=>{g.visible=Math.abs(j-app.index)<=1});const eased=prefersReduced?.13:.035;camera.position.z+=(destZ-camera.position.z)*eased;camera.position.x+=(vx-camera.position.x)*.03;camera.position.y+=(2.75-pointerY*.35-camera.position.y)*.034;camera.lookAt(1.9+vx*.42,2.2-pointerY*.24,camera.position.z-14.5);
- if(!prefersReduced){for(const v of animations){const o=v.obj,s=motion+(v.offset||0);if(v.kind==='song'){o.position.y=v.y+Math.sin(s*.78)*.075}else if(v.kind==='art'){o.position.y=v.y+Math.sin(s*.48)*.16;o.rotation.y=v.baseRot+Math.sin(s*.29)*.08}else if(v.kind==='shard'){o.rotation.z+=dt*.042}else if(v.kind==='slowspin'){o.rotation.y+=dt*.07}else if(v.kind==='spin'){o.rotation.y+=dt*.14;o.rotation.z+=dt*.1}else if(v.kind==='particle'){o.rotation.y+=dt*.004}else if(v.kind==='vinyl'){o.rotation.z+=dt*.16;o.position.z=-2.75+Math.sin(s*.6)*.13}else if(v.kind==='vault'){o.rotation.z+=dt*.012}}}
+ function animate(){if(disposed)return;rafId=requestAnimationFrame(animate);if(document.hidden)return;const dt=Math.min(clock.getDelta(),.05);motion+=dt;const targetX=(pointerX*.55)+dragOffset;dragOffset*=.984;const vx=targetX+Math.sin(motion*.18)*.13;const destZ=targetCameraZ;groups.forEach((g,j)=>{g.visible=Math.abs(j-app.index)<=1});const eased=prefersReduced?.13:.035;camera.position.z+=(destZ-camera.position.z)*eased;camera.position.x+=(vx-camera.position.x)*.03;camera.position.y+=(2.75-pointerY*.35-camera.position.y)*.034;camera.lookAt(1.9+vx*.42,2.2-pointerY*.24,camera.position.z-14.5);
+ if(!prefersReduced){for(const v of animations){if(v.eraIndex!==undefined&&v.eraIndex!==app.index)continue;const o=v.obj,s=motion+(v.offset||0);if(v.kind==='song'){o.position.y=v.y+Math.sin(s*.78)*.075}else if(v.kind==='art'){o.position.y=v.y+Math.sin(s*.48)*.16;o.rotation.y=v.baseRot+Math.sin(s*.29)*.08}else if(v.kind==='shard'){o.rotation.z+=dt*.042}else if(v.kind==='slowspin'){o.rotation.y+=dt*.07}else if(v.kind==='spin'){o.rotation.y+=dt*.14;o.rotation.z+=dt*.1}else if(v.kind==='particle'){o.rotation.y+=dt*.004}else if(v.kind==='vinyl'){o.rotation.z+=dt*.16;o.position.z=-2.75+Math.sin(s*.6)*.13}else if(v.kind==='vault'){o.rotation.z+=dt*.012}}}
   // Each artifact follows a different slow orbital drift. Hover locks it into a highlighted state.
   const rack=songRacks.get(app.index);
   if(rack)for(const v of rack.motions){
-   const hover=hoveredWorldSong===v.hit||focusedWorldSong===v.hit;
+   const hover=hoveredWorldSong===v.hit||focusedWorldSong===v.hit||v.hit?.userData?.trackIndex===keyboardHighlighted;
    const s=motion*v.velocity+v.phase;
    v.obj.position.set(v.base.x+(prefersReduced?0:Math.sin(s)*.28),v.base.y+(prefersReduced?0:Math.cos(s*.85)*.32),v.base.z+(prefersReduced?0:Math.sin(s*.69)*.39));
    if(!prefersReduced){v.model.rotation.y+=dt*(hover?.6:.17);v.model.rotation.z+=dt*.042;}
@@ -577,15 +693,32 @@ async function initWorld(){let THREE;try{THREE=await import('https://cdn.jsdeliv
   }
  renderer.render(scene,camera);frames++}
  animate();
- const resize=()=>{camera.aspect=innerWidth/innerHeight;camera.fov=touchScreen?68:52;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio||1,touchScreen?1.4:1.8))};window.addEventListener('resize',resize,{passive:true});
+ const resize=()=>{camera.aspect=innerWidth/innerHeight;camera.fov=touchScreen?68:52;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio||1,reducedGraphics?1:(touchScreen?1.25:1.5)))};window.addEventListener('resize',resize,{passive:true});
  window.addEventListener('pagehide',()=>{disposed=true;cancelAnimationFrame(rafId);renderer.dispose();for(const g of groups)g.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material){for(const m of (Array.isArray(o.material)?o.material:[o.material])){if(m.map)m.map.dispose();m.dispose()}}})},{once:true});
- return {setEra(i,instant){clearWorldSongHover();clearArtifactFocus();const prev=active;active=i;targetCameraZ=centerZ(i)+15.5;if(instant)camera.position.z=targetCameraZ;if(prev!==i){const old=songRacks.get(prev);if(old)disposeRack(old)}const rack=songRacks.get(i);if(rack&&!rack.loaded)drawSongRack(i);updateWorldSongPager(rack,rack?trackRows(RELEASES.find(r=>r.id===rack.releaseId)).length:0)},setTracks,changeSongPage:changeWorldSongPage,clearFocus:clearArtifactFocus,addCover:updateTexture};
+ return {setEra(i,instant){clearWorldSongHover();clearArtifactFocus();const prev=active;buildStage(i);active=i;targetCameraZ=centerZ(i)+15.5;if(instant)camera.position.z=targetCameraZ;if(prev!==i){const old=songRacks.get(prev);if(old)disposeRack(old)}const rack=songRacks.get(i);if(rack&&!rack.loaded)drawSongRack(i);updateWorldSongPager(rack,rack?trackRows(RELEASES.find(r=>r.id===rack.releaseId)).length:0)},setTracks,changeSongPage:changeWorldSongPage,highlightTrack,clearFocus:clearArtifactFocus,addCover:updateTexture,setQuality(low){renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,low?1:(touchScreen?1.25:1.5)));for(const v of animations)if(v.kind==='particle')v.obj.visible=!low}};
 }
 
 function enter(){if(app.entered)return;app.entered=true;$('#preloader').hidden=true;$('#entry').classList.add('hidden-entry');setTimeout(()=>{$('#entry').hidden=true},850);$('#topbar').hidden=false;$('#experience').hidden=false;$('#yearRail').hidden=false;$('#nextButton').focus({preventScroll:true});warmEraSongs(app.index);if(app.world)app.world.setEra(app.index,true);}
-function initControls(){$('#worldSongPrev').addEventListener('click',()=>app.world?.changeSongPage(-1));$('#worldSongNext').addEventListener('click',()=>app.world?.changeSongPage(1));$('#previewStop').addEventListener('click',stopPreview);$('#songFocusClose').addEventListener('click',()=>app.world?.clearFocus());document.addEventListener('visibilitychange',()=>{if(document.hidden)stopPreview()});createRail();updateEraUI();$('#enterButton').addEventListener('click',enter);$('#skipButton').addEventListener('click',enter);$('#brandButton').addEventListener('click',()=>goTo(0));$('#inspectButton').addEventListener('click',()=>openDrawer());$('#nextFromCopy').addEventListener('click',next);$('#prevButton').addEventListener('click',previous);$('#nextButton').addEventListener('click',next);$('#drawerClose').addEventListener('click',closeDrawer);$('#catalogButton').addEventListener('click',openCatalog);$('#catalogClose').addEventListener('click',closeCatalog);$('#catalogSearch').addEventListener('input',renderCatalog);$('#aboutButton').addEventListener('click',openInfo);$('#infoClose').addEventListener('click',closeInfo);
+function initControls(){
+ const graphicControl=$('#graphicsToggle');if(graphicControl){
+  graphicControl.setAttribute('aria-pressed',String(reducedGraphics));
+  graphicControl.addEventListener('click',()=>{reducedGraphics=!reducedGraphics;
+   graphicControl.setAttribute('aria-pressed',String(reducedGraphics));graphicControl.textContent=reducedGraphics?'Use full graphics':'Use reduced graphics';
+   try{localStorage.setItem('lucki-archive-reduced-graphics',reducedGraphics?'yes':'no')}catch{}
+   app.world?.setQuality(reducedGraphics);
+  });
+  graphicControl.textContent=reducedGraphics?'Use full graphics':'Use reduced graphics';
+ }
+ $('#songIndexToggle').addEventListener('click',()=>showSongIndex());
+ $('#songIndexClose').addEventListener('click',()=>showSongIndex(false));
+ $('#hoverPreviewOptIn').addEventListener('change',e=>{hoverPreviewsEnabled=e.target.checked;
+  try{localStorage.setItem('lucki-archive-hover-previews',hoverPreviewsEnabled?'yes':'no')}catch{}
+  if(!hoverPreviewsEnabled)stopPreview();syncHoverChoice();
+ });
+ syncHoverChoice();
+ $('#worldSongPrev').addEventListener('click',()=>app.world?.changeSongPage(-1));$('#worldSongNext').addEventListener('click',()=>app.world?.changeSongPage(1));$('#previewStop').addEventListener('click',stopPreview);$('#songFocusClose').addEventListener('click',()=>app.world?.clearFocus());document.addEventListener('visibilitychange',()=>{if(document.hidden)stopPreview()});createRail();updateEraUI();$('#enterButton').addEventListener('click',enter);$('#skipButton').addEventListener('click',enter);$('#brandButton').addEventListener('click',()=>goTo(0));$('#inspectButton').addEventListener('click',()=>openDrawer());$('#nextFromCopy').addEventListener('click',next);$('#prevButton').addEventListener('click',previous);$('#nextButton').addEventListener('click',next);$('#drawerClose').addEventListener('click',closeDrawer);$('#catalogButton').addEventListener('click',openCatalog);$('#catalogClose').addEventListener('click',closeCatalog);$('#catalogSearch').addEventListener('input',renderCatalog);$('#aboutButton').addEventListener('click',openInfo);$('#infoClose').addEventListener('click',closeInfo);
  let lastWheel=0,wheelAccum=0;window.addEventListener('wheel',e=>{if(!app.entered||app.drawer||app.catalog||app.info)return;e.preventDefault();const now=performance.now();if(now-lastWheel<800)return;wheelAccum+=e.deltaY;if(Math.abs(wheelAccum)<18)return;goTo(app.index+Math.sign(wheelAccum));lastWheel=now;wheelAccum=0},{passive:false});
- window.addEventListener('keydown',e=>{if(e.key==='Escape'){if(app.catalog)closeCatalog();else if(app.info)closeInfo();else if(app.drawer)closeDrawer();else app.world?.clearFocus();return}if(!app.entered||app.drawer||app.catalog||app.info||['INPUT','TEXTAREA'].includes(document.activeElement?.tagName))return;if(['ArrowRight','ArrowDown','PageDown',' '].includes(e.key)){e.preventDefault();next()}else if(['ArrowLeft','ArrowUp','PageUp'].includes(e.key)){e.preventDefault();previous()}else if(e.key==='Home'){e.preventDefault();goTo(0)}else if(e.key==='End'){e.preventDefault();goTo(ERAS.length-1)}else if(e.key.toLowerCase()==='a')openCatalog()});
+ window.addEventListener('keydown',e=>{if(e.key==='Escape'){if(app.catalog)closeCatalog();else if(app.info)closeInfo();else if(app.drawer)closeDrawer();else if(!$('#songIndexPanel').hidden)showSongIndex(false);else app.world?.clearFocus();return}if(!app.entered||app.drawer||app.catalog||app.info||['INPUT','TEXTAREA'].includes(document.activeElement?.tagName))return;if(['ArrowRight','ArrowDown','PageDown',' '].includes(e.key)){e.preventDefault();next()}else if(['ArrowLeft','ArrowUp','PageUp'].includes(e.key)){e.preventDefault();previous()}else if(e.key==='Home'){e.preventDefault();goTo(0)}else if(e.key==='End'){e.preventDefault();goTo(ERAS.length-1)}else if(e.key.toLowerCase()==='a')openCatalog();else if(e.key.toLowerCase()==='s')showSongIndex()});
  let sx=0,sy=0;const touchMoveStart=e=>{sx=e.touches[0].clientX;sy=e.touches[0].clientY};window.addEventListener('touchstart',touchMoveStart,{passive:true});window.addEventListener('touchend',e=>{if(!app.entered||app.drawer||app.catalog||app.info)return;const dx=e.changedTouches[0].clientX-sx,dy=e.changedTouches[0].clientY-sy;if(Math.abs(dx)>60||Math.abs(dy)>70){if(Math.abs(dx)>Math.abs(dy))goTo(app.index+(dx<0?1:-1));else goTo(app.index+(dy<0?1:-1))}},{passive:true});
  if(!touchScreen){window.addEventListener('pointermove',e=>{$('#cursor').style.left=e.clientX+'px';$('#cursor').style.top=e.clientY+'px'},{passive:true});document.addEventListener('pointerover',e=>{$('#cursor').classList.toggle('hover',Boolean(e.target.closest('button,a'))||e.target.tagName==='CANVAS')})}else $('#cursor').hidden=true;
 }
@@ -604,7 +737,7 @@ async function init(){
   } finally {
     clearTimeout(timeout);
     $('#loadFill').style.width='100%';
-    $('#loadText').textContent=app.world?'3D WORLDS READY':'GALLERY MODE READY';
+    $('#loadText').textContent=app.world?'3D WORLDS READY':'GALLERY MODE READY · SONGS ACCESSIBLE';
     setTimeout(()=>{$('#preloader').hidden=true},250);
   }
 }
@@ -621,6 +754,7 @@ init().catch(err=>{
 <body>
 <div id="scene" aria-hidden="true"></div>
 <div id="worldLabels" aria-label="3D record labels"></div>
+<!-- Keyboard-accessible companion to the visual-only WebGL scene. -->
 <div id="artifactTooltip" class="artifact-tooltip" hidden aria-live="off" aria-hidden="true"><span id="artifactTooltipIndex">MEMORY 01</span><strong id="artifactTooltipTitle">SONG</strong><small id="artifactTooltipMeta">HOVER TO LISTEN</small><i class="tooltip-wave" aria-hidden="true"><b></b><b></b><b></b><b></b><b></b><b></b><b></b><b></b></i></div>
 <div id="sceneFallback" class="scene-fallback" aria-hidden="true"><div class="fallback-halo"></div><div class="fallback-plane p1"></div><div class="fallback-plane p2"></div><div class="fallback-plane p3"></div><div class="fallback-floor"></div></div>
 <div class="grain" aria-hidden="true"></div>
@@ -643,14 +777,21 @@ init().catch(err=>{
 <header id="topbar" class="topbar" hidden>
   <button id="brandButton" class="brand" aria-label="Back to first era">LUCKI<span>.</span><sup>THE ARCHIVE</sup></button>
   <span class="top-center mono">AN INTERACTIVE JOURNEY THROUGH <b>2013—2026</b></span>
-  <div class="header-actions"><button id="catalogButton" class="header-link">ALL ARTWORK <span>↗</span></button><button id="aboutButton" class="header-menu" aria-label="About and controls">?</button></div>
+  <div class="header-actions"><button id="catalogButton" class="header-link">BROWSE ALBUMS <span>↗</span></button><button id="aboutButton" class="header-menu" aria-label="About and controls">?</button></div>
 </header>
 <nav id="yearRail" class="year-rail" aria-label="Choose a career era" hidden></nav>
 <main id="experience" class="experience" hidden>
   <div class="chapter-meta mono"><span id="chapterCounter">CHAPTER 001 / 017</span><span class="small-division"></span><span id="eraZone">THE FIRST TRANSMISSION</span></div>
-  <div id="sceneHint" class="scene-hint mono">MOVE CURSOR TO LOOK AROUND <span class="hint-cross">✛</span> FIND FLOATING SONG ARTIFACTS · HOVER TO LISTEN</div>
+  <div id="sceneHint" class="scene-hint mono">MOVE TO LOOK AROUND <span class="hint-cross">✛</span> EXPLORE ARTWORK · CLICK SONGS TO PREVIEW</div>
   <div id="hotspot" class="hotspot mono">CLICK TO INSPECT RECORD <span>↗</span></div>
-  <div id="worldSongPager" class="world-song-pager" hidden aria-label="Cycle through the song constellation"><span class="mono">MEMORY CONSTELLATION <b id="worldSongCount">01—08 / 08</b></span><div><button id="worldSongPrev" aria-label="Previous eight songs">←</button><button id="worldSongNext" aria-label="Next eight songs">→</button></div><small class="mono">HOVER TO REVEAL · CLICK TO FOCUS</small></div>
+  <button id="songIndexToggle" class="song-index-toggle" type="button" aria-expanded="false" aria-controls="songIndexPanel">♫ &nbsp; Browse songs <span aria-hidden="true">↗</span></button>
+  <section id="songIndexPanel" class="song-index-panel" aria-label="Songs in this era" hidden>
+    <div class="song-index-heading"><div><span class="mono">LISTENING ROOM</span><h3 id="songIndexHeading">Explore the songs</h3></div><button id="songIndexClose" type="button" aria-label="Close song explorer">×</button></div>
+    <label class="hover-option"><input id="hoverPreviewOptIn" type="checkbox"> <span>Play previews on hover</span></label>
+    <p id="hoverPreviewNote" class="index-description">Previews are off until enabled. Click a song to play its official sample.</p>
+    <div id="songIndexList" class="song-index-list" aria-live="polite"></div>
+  </section>
+  <div id="worldSongPager" class="world-song-pager" hidden aria-label="Cycle through the song constellation"><span class="mono">SONGS IN THIS ROOM <b id="worldSongCount">01—08 / 08</b></span><div><button id="worldSongPrev" aria-label="Previous eight songs">←</button><button id="worldSongNext" aria-label="Next eight songs">→</button></div><small class="mono">POINT TO DISCOVER · CLICK TO FOCUS</small></div>
   <div class="journey-copy">
     <div class="top-copy"><span id="eraIndex" class="index-label">01 / 17</span><span class="meta-bracket">◢ HISTORICAL RECORD ◣</span></div>
     <p id="eraDate" class="era-date mono">2013—14</p>
@@ -658,7 +799,7 @@ init().catch(err=>{
     <div class="era-sub"><i></i><span id="eraTag">THE FIRST TRANSMISSION</span></div>
     <p id="eraDesc" class="era-desc"></p>
     <div id="eraProjects" class="era-projects" aria-label="Projects in this era"></div>
-    <div class="era-actions"><button id="inspectButton" class="cta-main">INSPECT THIS ERA'S RECORDS <span>↗</span></button><button id="nextFromCopy" class="cta-next">NEXT ERA <span>→</span></button></div>
+    <div class="era-actions"><button id="inspectButton" class="cta-main">VIEW ERA RELEASES <span>↗</span></button><button id="nextFromCopy" class="cta-next">NEXT ERA <span>→</span></button></div>
   </div>
   <div class="edge-label left-edge mono">EST. 2013 // ARCHIVAL SYSTEM</div>
   <div class="edge-label right-edge mono">LUCKI ECK$ → LUCKI</div>
@@ -667,17 +808,17 @@ init().catch(err=>{
 </main>
 <div id="songFocus" class="song-focus" hidden><span id="songFocusIndex">ARCHIVE FRAGMENT / 01</span><button id="songFocusClose" aria-label="Close selected song">×</button><strong id="songFocusTitle">SONG NAME</strong><small id="songFocusHint">OFFICIAL PREVIEW</small><button id="songFocusInspect">EXPLORE RELEASE ↗</button></div>
 <div id="previewHud" class="preview-hud" hidden role="status" aria-live="polite"><span class="preview-disc" aria-hidden="true">◉</span><div class="preview-meta"><b id="previewSong">SONG PREVIEW</b><small id="previewStatus">OFFICIAL 30-SECOND SAMPLE</small></div><button id="previewStop" aria-label="Stop song preview">■</button></div>
-<aside id="drawer" class="drawer" aria-label="Era record details" aria-hidden="true">
+<aside id="drawer" class="drawer" role="dialog" aria-modal="true" aria-label="Era record details" aria-hidden="true" tabindex="-1" inert>
   <div class="drawer-top"><span class="mono">THE PHYSICAL ARCHIVE / RECORD INDEX</span><button id="drawerClose" aria-label="Close record details">✕</button></div>
   <div id="drawerContent" class="drawer-content"></div>
 </aside>
-<section id="catalog" class="catalog-overlay" role="dialog" aria-modal="true" aria-label="Full discography" hidden>
+<section id="catalog" class="catalog-overlay" tabindex="-1" role="dialog" aria-modal="true" aria-label="Full discography" hidden>
   <div class="catalog-top"><div><span class="mono">INDEX / ARTIFACTS / 001–018</span><h2>THE COMPLETE<br><em>RECORD WALL.</em></h2></div><button id="catalogClose" class="big-close" aria-label="Close discography">✕</button></div>
   <div class="catalog-controls"><label class="search-label"><span>⌕</span><input id="catalogSearch" type="search" placeholder="SEARCH AN ALBUM..." aria-label="Search releases"></label><span id="catalogCount" class="mono">18 RECORDS FOUND</span></div>
   <div id="catalogGrid" class="catalog-grid"></div>
   <footer class="catalog-footer mono">ARTWORK PROVIDED BY PUBLIC MUSIC-CATALOG PREVIEWS WHEN AVAILABLE. SOURCES: <a href="https://music.apple.com/us/artist/lucki/589757880" target="_blank" rel="noopener">APPLE MUSIC ↗</a> · <a href="https://musicbrainz.org/artist/9ccaca30-60aa-4890-ae6c-ab55225ee274" target="_blank" rel="noopener">MUSICBRAINZ ↗</a></footer>
 </section>
-<section id="info" class="info-overlay" role="dialog" aria-modal="true" aria-label="About the experience" hidden><div class="info-card"><button id="infoClose" class="big-close" aria-label="Close about">✕</button><span class="mono">SYSTEM / INFORMATION</span><h2>IT'S A MUSEUM.<br>NOT A WEBSITE.</h2><p>Journey through seventeen illustrated chapters of LUCKI's career. The visual installations change with every era, and every album sleeve is a record you can discover.</p><p><strong>SCROLL / ↑ ↓ / ← →</strong> — Move through time.<br><strong>DRAG OR MOVE MOUSE</strong> — Look around.<br><strong>CLICK ALBUM ART</strong> — Open the record.<br><strong>HOVER A FLOATING FRAGMENT</strong> — Reveal the song, hear an official preview when available. Click to play if your browser blocks hover audio.<br><strong>ALL ARTWORK</strong> — Browse everything.</p><p class="tiny">Unofficial, independent fan-made project. Covers are displayed as references to official releases and link to streaming pages. The animated environments are original interpretations, not historical photos. Only publicly provided short previews are requested; no complete audio files are hosted.</p><a href="https://music.apple.com/us/artist/lucki/589757880" target="_blank" rel="noopener" class="about-link">VISIT OFFICIAL ARTIST CATALOG ↗</a></div></section>
+<section id="info" class="info-overlay" tabindex="-1" role="dialog" aria-modal="true" aria-label="About the experience" hidden><div class="info-card"><button id="infoClose" class="big-close" aria-label="Close about">✕</button><span class="mono">SYSTEM / INFORMATION</span><h2>IT'S A MUSEUM.<br>NOT A WEBSITE.</h2><p>Journey through seventeen illustrated chapters of LUCKI's career. The visual installations change with every era, and every album sleeve is a record you can discover.</p><p><strong>SCROLL / ↑ ↓ / ← →</strong> — Move through time.<br><strong>DRAG OR MOVE MOUSE</strong> — Look around.<br><strong>CLICK ALBUM ART</strong> — Open the record.<br><strong>SONG EXPLORER</strong> — Open a keyboard-accessible song list. Select Play previews on hover to opt into hover audio. Click or tap a song to play an available sample.<br><strong>ALL ARTWORK</strong> — Browse everything.</p><p><button id="graphicsToggle" class="graphics-toggle" type="button" aria-pressed="false">Use reduced graphics</button></p><p class="tiny">Unofficial, independent fan-made project. Covers are displayed as references to official releases and link to streaming pages. The animated environments are original interpretations, not historical photos. Only publicly provided short previews are requested; no complete audio files are hosted.</p><a href="https://music.apple.com/us/artist/lucki/589757880" target="_blank" rel="noopener" class="about-link">VISIT OFFICIAL ARTIST CATALOG ↗</a></div></section>
 <div id="cursor" class="cursor" aria-hidden="true"></div>
 <div id="announcer" class="sr-only" role="status" aria-live="polite"></div>
 </body>

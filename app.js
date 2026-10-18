@@ -9,6 +9,13 @@ const app={index:0,entered:false,drawer:false,detail:null,catalog:false,info:fal
 const albumTracks=new Map(), trackRequests=new Map();
 const previewAudio=new Audio();previewAudio.preload='none';previewAudio.volume=.72;
 let previewSequence=0, playingRow=null, activePreviewTrack=null, previewPinned=false;
+let hoverPreviewsEnabled=false;
+try{hoverPreviewsEnabled=localStorage.getItem('lucki-archive-hover-previews')==='yes'}catch{}
+let activeModal=null, modalReturnFocus=null;
+let reducedGraphics=Boolean(navigator.deviceMemory&&navigator.deviceMemory<=4);
+try{const savedQuality=localStorage.getItem('lucki-archive-reduced-graphics');if(savedQuality!==null)reducedGraphics=savedQuality==='yes'}catch{}
+
+
 try{app.favorites=new Set(JSON.parse(localStorage.getItem('lucki-archive-saved-v2')||'[]'))}catch{}
 
 function escapeHTML(input){return String(input??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
@@ -23,7 +30,7 @@ function officialRelease(r){const best=app.imageTargets.get(r.id);return best?.l
 function timeLabel(milliseconds){if(!Number.isFinite(milliseconds)||milliseconds<=0)return '—';const n=Math.round(milliseconds/1000);return Math.floor(n/60)+':'+String(n%60).padStart(2,'0')}
 function fallbackTracks(r){return r.id==='last-laugh'?TRACKS.map((t,i)=>({name:t.name,duration:t.duration,number:i+1,previewUrl:null,context:t.context||''})):r.id==='son-of-sam'?SON_OF_SAM_TRACKS.map((t,i)=>({name:t.name,duration:t.duration,number:i+1,previewUrl:null,context:''})):[]}
 function trackRows(r){return albumTracks.get(r.id)||fallbackTracks(r)}
-function stopPreview(){previewPinned=false;previewSequence++;previewAudio.pause();playingRow=null;activePreviewTrack=null;document.querySelectorAll('.song-row.is-playing').forEach(el=>el.classList.remove('is-playing'));const hud=$('#previewHud');if(hud)hud.hidden=true}
+function stopPreview(){previewPinned=false;previewSequence++;previewAudio.pause();playingRow=null;activePreviewTrack=null;document.querySelectorAll('.song-row.is-playing').forEach(el=>el.classList.remove('is-playing'));const hud=$('#previewHud');if(hud)hud.hidden=true;document.querySelectorAll('.accessible-track.is-playing').forEach(el=>el.classList.remove('is-playing'))}
 previewAudio.addEventListener('ended',stopPreview);
 function showPreviewStatus(song,status){$('#previewHud').hidden=false;$('#previewSong').textContent=song;$('#previewStatus').textContent=status}
 async function startPreview(track,row){
@@ -36,7 +43,7 @@ async function startPreview(track,row){
  try{
   await previewAudio.play();
   if(request!==previewSequence){previewAudio.pause();return}
-  row.classList.add('is-playing');showPreviewStatus(track.name,previewPinned?'◉ PREVIEW PINNED · PRESS STOP TO END':'◉ PLAYING SHORT PREVIEW · HOVER OFF TO STOP');
+  row.classList.add('is-playing');document.querySelectorAll('.accessible-track').forEach(el=>el.classList.toggle('is-playing',el.dataset.previewUrl===track.previewUrl));showPreviewStatus(track.name,previewPinned?'◉ PREVIEW PINNED · PRESS STOP TO END':'◉ PLAYING SHORT PREVIEW · HOVER OFF TO STOP');
  }catch(e){
   if(request!==previewSequence)return;
   activePreviewTrack=null;row.classList.remove('is-playing');
@@ -48,9 +55,9 @@ async function startPreview(track,row){
 function bindSongRows(){
  $$('#drawerContent .song-row').forEach(row=>{
   const id=row.dataset.release, idx=Number(row.dataset.track);const release=RELEASES.find(r=>r.id===id);
-  const track=release&&trackRows(release)[idx];if(!track||!track.previewUrl)return;
-  row.addEventListener('mouseenter',()=>{void startPreview(track,row)});
-  row.addEventListener('mouseleave',()=>{if(playingRow===row||activePreviewTrack===track.previewUrl)stopPreview()});
+  const track=release&&trackRows(release)[idx];if(!track)return;if(!track.previewUrl){row.setAttribute('aria-label',track.name+', preview unavailable. Open official release.');row.addEventListener('click',()=>window.open(officialRelease(release),'_blank','noopener,noreferrer'));return}
+  row.addEventListener('mouseenter',()=>{if(hoverPreviewsEnabled)void startPreview(track,row)});
+  row.addEventListener('mouseleave',()=>{if(hoverPreviewsEnabled&&!previewPinned&&(playingRow===row||activePreviewTrack===track.previewUrl))stopPreview()});
   row.addEventListener('click',()=>{if(playingRow===row&&!previewAudio.paused){stopPreview()}else void startPreview(track,row)});
   row.addEventListener('focus',()=>{row.dataset.focus='true'});
  });
@@ -58,7 +65,7 @@ function bindSongRows(){
 async function loadAlbumTracks(release){
  if(albumTracks.has(release.id))return albumTracks.get(release.id);
  if(trackRequests.has(release.id))return trackRequests.get(release.id);
- if(!release.appleId){const rows=fallbackTracks(release);albumTracks.set(release.id,rows);app.world?.setTracks(release.id,rows);return rows}
+ if(!release.appleId){const rows=fallbackTracks(release);albumTracks.set(release.id,rows);app.world?.setTracks(release.id,rows);if(app.index===ERAS.findIndex(e=>e.id===release.era)&&$('#songIndexPanel')&&!$('#songIndexPanel').hidden)renderSongIndex();return rows}
  const promise=(async()=>{
   let rows=[];
   try{
@@ -81,6 +88,7 @@ async function loadAlbumTracks(release){
   if(!rows.length)rows=fallbackTracks(release);
   albumTracks.set(release.id,rows);
   app.world?.setTracks(release.id,rows);
+  if(app.index===ERAS.findIndex(e=>e.id===release.era)&&!$('#songIndexPanel').hidden)renderSongIndex();
   if(app.drawer&&app.detail===release.id)renderDrawer();
   return rows;
  })();
@@ -90,8 +98,54 @@ async function loadAlbumTracks(release){
 function songListHTML(r){
  const list=trackRows(r),isLoading=trackRequests.has(r.id);
  if(!list.length)return `<section class="track-list"><div class="songs-heading"><span>TRACK INDEX</span><small>${isLoading?'FETCHING OFFICIAL TRACKLIST…':'TRACKLIST UNAVAILABLE'}</small></div><p class="track-empty">${isLoading?'Loading tracks from Apple Music…':'This release is not currently returned by the music catalog. Open its official listing to browse songs.'}</p></section>`;
- return `<section class="track-list"><div class="songs-heading"><span>TRACK INDEX / ${String(list.length).padStart(2,'0')}</span><small>HOVER TO HEAR · CLICK TO PLAY</small></div><div class="songs-grid">${list.map((track,i)=>`<button type="button" class="song-row" data-release="${escapeHTML(r.id)}" data-track="${i}" ${track.previewUrl?'': 'disabled'} title="${track.previewUrl?'Hover or click to play preview':'Preview not available for this track'}"><span class="song-number">${String(track.number||i+1).padStart(2,'0')}</span><span class="song-title">${escapeHTML(track.name)}${track.context?`<small>${escapeHTML(track.context)}</small>`:''}</span><span class="song-duration">${escapeHTML(track.duration||'—')}</span><span class="song-play">${track.previewUrl?'▶':'—'}</span></button>`).join('')}</div><p class="track-credit">${list.some(t=>t.previewUrl)?'Audio is a short, official catalog preview. Some tracks are unavailable.':'Tracklist verified; official playback previews are not available here. Use the streaming link above.'}</p></section>`;
+ return `<section class="track-list"><div class="songs-heading"><span>TRACK INDEX / ${String(list.length).padStart(2,'0')}</span><small>CLICK TO PLAY · OPTIONAL HOVER</small></div><div class="songs-grid">${list.map((track,i)=>`<button type="button" class="song-row" data-release="${escapeHTML(r.id)}" data-track="${i}" title="${track.previewUrl?'Hover or click to play preview':'No preview; open the official release'}"><span class="song-number">${String(track.number||i+1).padStart(2,'0')}</span><span class="song-title">${escapeHTML(track.name)}${track.context?`<small>${escapeHTML(track.context)}</small>`:''}</span><span class="song-duration">${escapeHTML(track.duration||'—')}</span><span class="song-play">${track.previewUrl?'▶':'↗'}</span></button>`).join('')}</div><p class="track-credit">${list.some(t=>t.previewUrl)?'Audio is a short, official catalog preview. Some tracks are unavailable.':'Tracklist verified; official playback previews are not available here. Use the streaming link above.'}</p></section>`;
 }
+
+
+// Accessible equivalent to the spatial WebGL relics. The 3D layer is decorative for assistive technology.
+function syncHoverChoice(){const input=$('#hoverPreviewOptIn');if(input)input.checked=hoverPreviewsEnabled;
+ const note=$('#hoverPreviewNote');if(note)note.textContent=hoverPreviewsEnabled?'Hover audio enabled. Move away to stop. Click a song to pin a preview.':'Hover audio is off. Click a song to play a short official preview.';
+}
+function showSongIndex(force){const panel=$('#songIndexPanel'),button=$('#songIndexToggle');if(!panel||!button)return;
+ const open=force===undefined?panel.hidden:Boolean(force);panel.hidden=!open;button.setAttribute('aria-expanded',String(open));
+ if(open){renderSongIndex();syncHoverChoice();$('#songIndexClose').focus({preventScroll:true})}
+ else {app.world?.highlightTrack(-1);if(panel.contains(document.activeElement))button.focus({preventScroll:true})}
+}
+function renderSongIndex(){const root=$('#songIndexList');if(!root)return;
+ const release=eraReleaseList(app.index)[0];$('#songIndexHeading').textContent=release?release.title:'This era';
+ if(!release){root.textContent='No songs in this era.';return}
+ const tracks=trackRows(release);
+ if(!tracks.length){root.innerHTML='<p class="index-description">Loading the release tracklist, or this release is not available in the music catalog. You can still open its album.</p><button class="song-index-album-link" type="button">Open album details ↗</button>';root.querySelector('button')?.addEventListener('click',()=>openDrawer(release.id));return}
+ root.innerHTML=tracks.map((t,i)=>`<button type="button" class="accessible-track" data-track="${i}" data-preview-url="${escapeHTML(t.previewUrl||'')}" aria-label="${escapeHTML(t.name)}, track ${i+1}. ${t.previewUrl?'Play available short preview':'Preview unavailable; open album details'}"><span class="track-order">${String(i+1).padStart(2,'0')}</span><span class="track-title">${escapeHTML(t.name)}</span><span class="track-length">${escapeHTML(t.duration||'—')}</span><span aria-hidden="true">${t.previewUrl?'▶':'↗'}</span></button>`).join('');
+ for(const button of root.querySelectorAll('.accessible-track')){
+  const i=Number(button.dataset.track),track=tracks[i];
+  button.addEventListener('focus',()=>app.world?.highlightTrack(i));
+  button.addEventListener('blur',()=>app.world?.highlightTrack(-1));
+  button.addEventListener('mouseenter',()=>{app.world?.highlightTrack(i);if(hoverPreviewsEnabled&&track.previewUrl)void startPreview(track,button)});
+  button.addEventListener('mouseleave',()=>{app.world?.highlightTrack(-1);if(hoverPreviewsEnabled&&!previewPinned&&activePreviewTrack===track.previewUrl)stopPreview()});
+  button.addEventListener('click',()=>{if(!track.previewUrl){openDrawer(release.id);return}if(activePreviewTrack===track.previewUrl&&!previewAudio.paused){stopPreview()}else {previewPinned=true;void startPreview(track,button)}});
+ }
+}
+
+// A single modal is active at a time. Hide inactive controls from keyboard navigation.
+function modalBackground(inactive){for(const selector of ['#topbar','#yearRail','#experience','#worldLabels','#songIndexToggle']){
+ const node=$(selector);if(node)node.inert=inactive;
+}}
+function openDialog(node,focusElement){if(!activeModal){modalReturnFocus=document.activeElement instanceof HTMLElement?document.activeElement:null}
+ activeModal=node;node.inert=false;node.hidden=false;modalBackground(true);(focusElement||node).focus({preventScroll:true});
+}
+function closeDialog(node){if(activeModal!==node)return;node.inert=true;modalBackground(false);activeModal=null;
+ const original=modalReturnFocus;modalReturnFocus=null;
+ if(original?.isConnected&&!original.closest('[hidden]')&&!original.inert)original.focus({preventScroll:true});
+ else $('#songIndexToggle')?.focus({preventScroll:true});
+}
+document.addEventListener('keydown',event=>{if(!activeModal||event.key!=='Tab')return;
+ const elements=[...activeModal.querySelectorAll('button:not([disabled]),a[href],input:not([disabled]),select:not([disabled]),[tabindex]:not([tabindex="-1"])')].filter(el=>!el.hidden&&el.getClientRects().length);
+ if(!elements.length){event.preventDefault();activeModal.focus();return}
+ const first=elements[0],last=elements[elements.length-1];
+ if(event.shiftKey&&(document.activeElement===first||document.activeElement===activeModal)){event.preventDefault();last.focus()}
+ else if(!event.shiftKey&&(document.activeElement===last||document.activeElement===activeModal)){event.preventDefault();first.focus()}
+},true);
 
 function eraReleaseList(index){const id=ERAS[index].id;return RELEASES.filter(r=>r.era===id).sort((a,b)=>(a.id===id?-1:0)-(b.id===id?-1:0))}
 // Load official release tracks as visitors walk into a new 3D room.
@@ -109,12 +163,12 @@ function updateEraUI(){const e=ERAS[app.index];document.documentElement.style.se
 function createRail(){$('#yearRail').innerHTML=ERAS.map((e,i)=>`<button class="year-stop ${i===0?'active':''}" data-era="${i}" aria-label="Go to ${e.title}, ${e.year}" title="${escapeHTML(e.title)}"><span class="dot"></span><span>${String(i+1).padStart(2,'0')}</span></button>`).join('');$$('.year-stop').forEach(el=>el.addEventListener('click',()=>goTo(Number(el.dataset.era))))}
 
 let travelTimer=null;
-function goTo(index,{instant=false}={}){stopPreview();const next=clamp(index,0,ERAS.length-1);if(next===app.index&&!instant)return;if(app.catalog||app.info)return;closeDrawer();const distance=Math.abs(next-app.index);app.index=next;updateEraUI();warmEraSongs(next);if(app.world)app.world.setEra(next,instant);if(!prefersReduced&&!instant&&distance>1){const w=$('#wipe');$('#wipeYear').textContent=ERAS[next].year.split('—')[0];w.classList.remove('in');void w.offsetWidth;w.classList.add('in');clearTimeout(travelTimer);travelTimer=setTimeout(()=>w.classList.remove('in'),1000)} }
+function goTo(index,{instant=false}={}){stopPreview();const next=clamp(index,0,ERAS.length-1);if(next===app.index&&!instant)return;if(app.catalog||app.info)return;closeDrawer();const distance=Math.abs(next-app.index);app.index=next;updateEraUI();warmEraSongs(next);if(!$('#songIndexPanel').hidden)renderSongIndex();if(app.world)app.world.setEra(next,instant);if(!prefersReduced&&!instant&&distance>1){const w=$('#wipe');$('#wipeYear').textContent=ERAS[next].year.split('—')[0];w.classList.remove('in');void w.offsetWidth;w.classList.add('in');clearTimeout(travelTimer);travelTimer=setTimeout(()=>w.classList.remove('in'),1000)} }
 function next(){if(app.entered)goTo(app.index+1)}
 function previous(){if(app.entered)goTo(app.index-1)}
 
-function openDrawer(id){stopPreview();const r=id?RELEASES.find(r=>r.id===id):null;app.drawer=true;app.detail=r?.id||null;renderDrawer();$('#drawer').classList.add('open');$('#drawer').setAttribute('aria-hidden','false');$('#drawerClose').focus({preventScroll:true})}
-function closeDrawer(){stopPreview();app.drawer=false;$('#drawer').classList.remove('open');$('#drawer').setAttribute('aria-hidden','true')}
+function openDrawer(id){stopPreview();const r=id?RELEASES.find(r=>r.id===id):null;app.drawer=true;app.detail=r?.id||null;renderDrawer();$('#drawer').classList.add('open');$('#drawer').setAttribute('aria-hidden','false');openDialog($('#drawer'),$('#drawerClose'))}
+function closeDrawer(){if(!app.drawer)return;stopPreview();app.drawer=false;$('#drawer').classList.remove('open');$('#drawer').setAttribute('aria-hidden','true');closeDialog($('#drawer'))}
 function renderDrawer(){if(playingRow)stopPreview();const era=ERAS[app.index];const rs=eraReleaseList(app.index);const target=RELEASES.find(r=>r.id===app.detail);
  if(target){const saved=app.favorites.has(target.id);const trackHtml=songListHTML(target);
  $('#drawerContent').innerHTML=`<button class="back-link" id="backToEra">← BACK TO ERA ${String(app.index+1).padStart(2,'0')}</button><p class="drawer-era-index mono">OFFICIAL RELEASE / ${target.year} / ${escapeHTML(target.type.toUpperCase())}</p><div class="record-detail"><div class="hero-cover">${coverCard(target)}</div><h3>${escapeHTML(target.title)}</h3><p>${escapeHTML(target.notes)}</p><a class="record-link" href="${escapeHTML(officialRelease(target))}" target="_blank" rel="noopener noreferrer">OPEN OFFICIAL MUSIC LISTING ↗</a><p><button id="favoriteButton" class="back-link">${saved?'★ SAVED TO YOUR ARCHIVE':'☆ SAVE TO YOUR ARCHIVE'}</button></p>${trackHtml}<p class="drawer-note">Official cover imagery appears when a public music-catalog preview is available. Recording periods are not inferred from release dates.</p></div>`;
@@ -125,16 +179,16 @@ function renderDrawer(){if(playingRow)stopPreview();const era=ERAS[app.index];co
  $$('.drawer-release').forEach(b=>b.addEventListener('click',()=>{app.detail=b.dataset.record;renderDrawer()}));}
 }
 function renderCatalog(){const needle=$('#catalogSearch').value.trim().toLowerCase();const found=RELEASES.filter(r=>(r.title+' '+r.year+' '+r.type+' '+(ERAS.find(e=>e.id===r.era)?.short||'')).toLowerCase().includes(needle));$('#catalogCount').textContent=found.length+' RECORDS FOUND';$('#catalogGrid').innerHTML=found.map(r=>`<button class="catalog-item" data-record="${r.id}" title="Travel to ${escapeHTML(r.title)}">${coverCard(r)}<span class="cover-meta"><strong>${escapeHTML(r.title)}</strong><em>${r.year} ↗</em></span></button>`).join('')||'<p class="mono">NO MATCHING RELEASES. TRY A DIFFERENT SEARCH.</p>';$$('.catalog-item').forEach(el=>el.addEventListener('click',()=>{const r=RELEASES.find(x=>x.id===el.dataset.record);if(!r)return;closeCatalog();goTo(ERAS.findIndex(e=>e.id===r.era),{instant:true});openDrawer(r.id)}))}
-function openCatalog() {stopPreview();closeDrawer();app.catalog=true;$('#catalog').hidden=false;renderCatalog();$('#catalogSearch').focus({preventScroll:true})}
-function closeCatalog(){app.catalog=false;$('#catalog').hidden=true}
-function openInfo(){stopPreview();closeDrawer();app.info=true;$('#info').hidden=false;$('#infoClose').focus({preventScroll:true})}
-function closeInfo(){app.info=false;$('#info').hidden=true}
+function openCatalog() {stopPreview();closeDrawer();app.catalog=true;renderCatalog();openDialog($('#catalog'),$('#catalogSearch'))}
+function closeCatalog(){if(!app.catalog)return;app.catalog=false;closeDialog($('#catalog'));$('#catalog').hidden=true}
+function openInfo(){stopPreview();closeDrawer();app.info=true;openDialog($('#info'),$('#infoClose'))}
+function closeInfo(){if(!app.info)return;app.info=false;closeDialog($('#info'));$('#info').hidden=true}
 
 // A curated collection ID per release prevents false matches from lookalike album names.
 // The browser only embeds preview-size artwork from the official catalog; nothing is uploaded here.
 async function fetchJson(url,timeout=6500){const controller=new AbortController();const t=setTimeout(()=>controller.abort(),timeout);try{const response=await fetch(url,{signal:controller.signal});if(!response.ok)throw Error(`HTTP ${response.status}`);return await response.json()}finally{clearTimeout(t)}}
 function artworkLarge(url){return String(url).replace(/\d+x\d+bb(?=\.)/,'600x600bb').replace(/\d+x\d+(?=\.)/,'600x600')}
-function addArtwork(r,url,link){if(!/^https:\/\//.test(url))return;const finalUrl=artworkLarge(url);app.coverUrls.set(r.id,finalUrl);if(link)app.imageTargets.set(r.id,{link});app.world?.addCover(r.id,finalUrl);if(app.drawer)renderDrawer();if(app.catalog)renderCatalog();updateFallbackArt()}
+function addArtwork(r,url,link){if(!/^https:\/\//.test(url))return;const finalUrl=artworkLarge(url);app.coverUrls.set(r.id,finalUrl);if(link)app.imageTargets.set(r.id,{link});app.world?.addCover(r.id,finalUrl);if(app.drawer&&!$('#drawer').contains(document.activeElement))renderDrawer();if(app.catalog)renderCatalog();updateFallbackArt()}
 async function loadCovers(){if(app.loadingCovers)return;app.loadingCovers=true;
  // An independently verified Spotify cover is used for Son of Sam, which isn't in Apple's main catalog.
  for(const r of RELEASES)if(r.cover)addArtwork(r,r.cover,r.url);
@@ -159,7 +213,7 @@ async function loadCovers(){if(app.loadingCovers)return;app.loadingCovers=true;
 function createLabelCanvas(text,subtitle,color='#d7e6d8',width=512,height=256){const c=document.createElement('canvas');c.width=width;c.height=height;const x=c.getContext('2d');x.fillStyle='#090b0ccf';x.fillRect(0,0,width,height);x.strokeStyle=color;x.globalAlpha=.5;x.lineWidth=2;x.strokeRect(9,9,width-18,height-18);x.globalAlpha=1;x.fillStyle=color;x.font=`bold ${Math.round(width*.095)}px Impact, Arial Black, sans-serif`;let words=String(text).toUpperCase().split(' ');let lines=[];let line='';for(const w of words){const test=line?line+' '+w:w;if(x.measureText(test).width>width-65&&line){lines.push(line);line=w}else line=test}lines.push(line);lines.slice(0,3).forEach((l,i)=>x.fillText(l,30,Math.max(90,126-(lines.length-1)*22)+i*57));x.font=`${Math.round(width*.027)}px monospace`;x.fillStyle='#d4dbcb';x.fillText(String(subtitle).slice(0,46).toUpperCase(),30,height-29);return c}
 
 async function initWorld(){let THREE;try{THREE=await import('https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.module.js')}catch(err){console.warn('3D engine unavailable; fallback gallery stays accessible.',err);return null}
- const host=$('#scene');let renderer;try{renderer=new THREE.WebGLRenderer({antialias:!touchScreen,alpha:true,powerPreference:'high-performance'});renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,touchScreen?1.4:1.8));renderer.setSize(innerWidth,innerHeight);renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.25;host.appendChild(renderer.domElement)}catch(err){console.warn('WebGL initialization failed',err);return null}
+ const host=$('#scene');let renderer;try{renderer=new THREE.WebGLRenderer({antialias:!touchScreen,alpha:true,powerPreference:'high-performance'});renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,reducedGraphics?1:(touchScreen?1.25:1.5)));renderer.setSize(innerWidth,innerHeight);renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.25;host.appendChild(renderer.domElement)}catch(err){console.warn('WebGL initialization failed',err);return null}
  $('#sceneFallback').style.display='none';app.rendererOkay=true;
  const scene=new THREE.Scene();scene.background=new THREE.Color('#050607');scene.fog=new THREE.FogExp2('#050607',.017);
  const camera=new THREE.PerspectiveCamera(touchScreen?68:52,innerWidth/innerHeight,.08,430);const G=39;const centerZ=i=>-i*G;
@@ -185,7 +239,7 @@ async function initWorld(){let THREE;try{THREE=await import('https://cdn.jsdeliv
   [7.9,8.3,-7.9],[7.65,.35,-5.15],[11.25,7.65,-8.8],[3.95,4.8,-6.4],
   [6.25,4.8,-8.5],[10.9,-.5,-7.1],[3.45,8.7,-9.5],[9.55,8.85,-12]
  ];
- function addParticles(group,col,num=80){const arr=new Float32Array(num*3);for(let i=0;i<num;i++){arr[i*3]=(Math.random()-.5)*22;arr[i*3+1]=Math.random()*15-3;arr[i*3+2]=(Math.random()-.5)*25;}const geom=new THREE.BufferGeometry();geom.setAttribute('position',new THREE.BufferAttribute(arr,3));const pts=new THREE.Points(geom,new THREE.PointsMaterial({color:col,size:touchScreen?.05:.064,transparent:true,opacity:.65,depthWrite:false,sizeAttenuation:true}));group.add(pts);animations.push({obj:pts,spin:.001,kind:'particle'})}
+ function addParticles(group,col,num=80){const arr=new Float32Array(num*3);for(let i=0;i<num;i++){arr[i*3]=(Math.random()-.5)*22;arr[i*3+1]=Math.random()*15-3;arr[i*3+2]=(Math.random()-.5)*25;}const geom=new THREE.BufferGeometry();geom.setAttribute('position',new THREE.BufferAttribute(arr,3));const pts=new THREE.Points(geom,new THREE.PointsMaterial({color:col,size:touchScreen?.05:.064,transparent:true,opacity:.65,depthWrite:false,sizeAttenuation:true}));group.add(pts);pts.visible=!reducedGraphics;animations.push({obj:pts,spin:.001,kind:'particle'})}
  function arch(group,z,col){const tmat=new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:.38,depthWrite:false});addBox(group,[.09,11,.09],[-9,2,z],tmat);addBox(group,[.09,11,.09],[9,2,z],tmat);addBox(group,[18,.09,.09],[0,7.5,z],tmat)}
  function giveArtworkMesh(group,r,pos,size,i){const holder=new THREE.Group();holder.position.set(...pos);holder.rotation.y=[.12,-.17,.2][i%3];group.add(holder);const [w,h]=size;const artMat=new THREE.MeshBasicMaterial({color:'#ffffff',side:THREE.DoubleSide});let c=createLabelCanvas(r.title,`${r.year} / ARCHIVE RECORD — SELECT TO VIEW`,ERAS[active].accent,512,512);const placeholder=new THREE.CanvasTexture(c);placeholder.colorSpace=THREE.SRGBColorSpace;artMat.map=placeholder;const art=new THREE.Mesh(new THREE.PlaneGeometry(w,h),artMat);art.position.z=.14;art.userData={releaseId:r.id,eraIndex:active};holder.add(art);interactive.push(art);frame(holder,w+.18,h+.18,.1);
  addBox(holder,[w+.25,h+.25,.13],[0,0,-.025],mat('#151718',.7,.55));
@@ -291,6 +345,13 @@ async function initWorld(){let THREE;try{THREE=await import('https://cdn.jsdeliv
   if(eraIndex<0)return;const rack=songRacks.get(eraIndex);
   if(rack&&rack.releaseId===releaseId&&eraIndex===app.index&&app.entered)drawSongRack(eraIndex);
  }
+ let keyboardHighlighted=-1;
+ function highlightTrack(i){keyboardHighlighted=i;
+  const rack=songRacks.get(app.index);if(!rack)return;
+  if(i>=0){const perPage=app.index===ERAS.length-1?12:8;const page=Math.floor(i/perPage);
+   if(page!==rack.page){rack.page=page;drawSongRack(app.index)}
+  }
+ }
  function clearArtifactFocus(){focusedWorldSong=null;const panel=$('#songFocus');if(panel)panel.hidden=true;if(previewPinned)stopPreview()}
  function focusArtifact(hit){if(focusedWorldSong===hit){clearArtifactFocus();return}
   focusedWorldSong=hit;const data=hit.userData,t=data.trackSong;
@@ -308,13 +369,13 @@ async function initWorld(){let THREE;try{THREE=await import('https://cdn.jsdeliv
  function showArtifactTooltip(mesh,e){const tip=$('#artifactTooltip'),t=mesh.userData.trackSong;
   $('#artifactTooltipIndex').textContent=`MEMORY ${String(mesh.userData.trackNumber).padStart(2,'0')}`;
   $('#artifactTooltipTitle').textContent=t.name;
-  $('#artifactTooltipMeta').textContent=t.previewUrl?'◉ HOVER TO LISTEN · CLICK TO HOLD':'◌ PREVIEW UNAVAILABLE · CLICK TO INSPECT';
+  $('#artifactTooltipMeta').textContent=t.previewUrl?(hoverPreviewsEnabled?'◉ HOVER PREVIEW · CLICK TO HOLD':'◉ CLICK TO PLAY PREVIEW'):'◌ PREVIEW UNAVAILABLE · CLICK TO INSPECT';
   tip.hidden=false;tip.style.left=Math.min(innerWidth-260,Math.max(14,e.clientX+20))+'px';
   tip.style.top=Math.min(innerHeight-152,Math.max(94,e.clientY-80))+'px';
  }
  function handleWorldSongHover(hit,e){const mesh=hit?.object?.userData?.trackSong?hit.object:null;
   if(mesh!==hoveredWorldSong){clearWorldSongHover();hoveredWorldSong=mesh;
-   if(!previewPinned&&mesh?.userData.trackSong?.previewUrl){const track=mesh.userData.trackSong;
+   if(hoverPreviewsEnabled&&!previewPinned&&mesh?.userData.trackSong?.previewUrl){const track=mesh.userData.trackSong;
     worldSongHoverTimer=setTimeout(()=>{if(hoveredWorldSong===mesh&&app.entered&&!app.drawer&&!app.catalog&&!app.info)void startPreview(track,worldRow)},260);
    }
   }
@@ -351,13 +412,20 @@ async function initWorld(){let THREE;try{THREE=await import('https://cdn.jsdeliv
  const hiddenName=worldText(group,ERAS[i].short,`${ERAS[i].year}  //  ${ERAS[i].visual}`,color,[5.7,8,-8],[6.5,2.4]);hiddenName.rotation.y=-.2;
  addParticles(group,color,touchScreen?38:88);
  }
- for(let i=0;i<ERAS.length;i++){active=i;const stage=new THREE.Group();stage.position.z=centerZ(i);world.add(stage);groups.push(stage);const releases=eraReleaseList(i);stageEnvironment(stage,i,ERAS[i].accent);if(i===ERAS.length-1){giveArtworkMesh(stage,releases[0],[1.45,5.6,-4.4],[3.45,3.45],0)}else releases.slice(0,4).forEach((r,j)=>{const hasMany=releases.length>2;const x=[2.05,5.3,-1.25,7.8][j];const y=[3.15,4.8,5.2,1.45][j];const z=[1.1,-1.8,-4.2,-3.1][j];giveArtworkMesh(stage,r,[x,y,z],[hasMany?2.55:3.7,hasMany?2.55:3.7],j)});
- // Original short archival title on each stage floor
- worldText(stage,`${String(i+1).padStart(2,'0')} / ${ERAS[i].start}`,ERAS[i].tag,ERAS[i].accent,[-6,-1.0,-4],[3,1.3]).rotation.y=.19;
+ // Build only the entered era. Heavy scene geometry and song racks are created on demand.
+ const builtStages=new Set();
+ for(let i=0;i<ERAS.length;i++){const stage=new THREE.Group();stage.position.z=centerZ(i);world.add(stage);groups.push(stage)}
+ function buildStage(i){if(i<0||i>=ERAS.length||builtStages.has(i))return;
+  const oldActive=active,stage=groups[i],firstAnimation=animations.length;active=i;
+  const releases=eraReleaseList(i);stageEnvironment(stage,i,ERAS[i].accent);
+  if(i===ERAS.length-1){if(releases[0])giveArtworkMesh(stage,releases[0],[1.45,5.6,-4.4],[3.45,3.45],0)}
+  else releases.slice(0,4).forEach((r,j)=>{const hasMany=releases.length>2;const x=[2.05,5.3,-1.25,7.8][j];const y=[3.15,4.8,5.2,1.45][j];const z=[1.1,-1.8,-4.2,-3.1][j];giveArtworkMesh(stage,r,[x,y,z],[hasMany?2.55:3.7,hasMany?2.55:3.7],j)});
+  worldText(stage,`${String(i+1).padStart(2,'0')} / ${ERAS[i].start}`,ERAS[i].tag,ERAS[i].accent,[-6,-1.0,-4],[3,1.3]).rotation.y=.19;
+  if(releases[0])makeSongRack(stage,i,releases[0]);
+  animations.slice(firstAnimation).forEach(v=>v.eraIndex=i);
+  builtStages.add(i);active=oldActive;
  }
- // Add individually selectable song artifacts to the active gallery space.
- for(let i=0;i<ERAS.length;i++){const release=eraReleaseList(i)[0];if(release)makeSongRack(groups[i],i,release)}
- active=0;
+ buildStage(0);active=0;
  function updateTexture(id,url){const m=textureTargets.get(id);if(!m)return;textureLoader.load(url,tex=>{if(disposed)return;tex.colorSpace=THREE.SRGBColorSpace;tex.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());m.material.map=tex;m.material.color.set('#ffffff');m.material.needsUpdate=true;albumCoverTextures.set(id,tex);const rack=songRacks.get(app.index);if(rack&&rack.releaseId===id){for(const photo of rack.photos){const copy=tex.clone();copy.needsUpdate=true;photo.material.map=copy;photo.material.color.set('#ffffff');photo.material.needsUpdate=true}}},undefined,()=>{console.info('3D artwork image unavailable for '+id)})}
  const onPointerMove=(e)=>{pointerX=(e.clientX/innerWidth-.5)*2;pointerY=(e.clientY/innerHeight-.5)*2;if(dragging){dragOffset=clamp(dragOffset+(e.clientX-dragLastX)*.011,-2.6,2.6);dragLastX=e.clientX;wasClicked=true;clearWorldSongHover()}if(app.entered&&!app.drawer&&!app.catalog&&!app.info&&!dragging){const hit=pick(e);handleWorldSongHover(hit,e);$('#hotspot').classList.toggle('show',Boolean(hit));$('#hotspot').style.left=e.clientX+'px';$('#hotspot').style.top=e.clientY+'px';const track=hit?.object.userData.trackSong;$('#hotspot').classList.toggle('show',Boolean(hit)&&!track);$('#hotspot').textContent=track?'':hit?'INSPECT ALBUM ARTWORK ↗':'';renderer.domElement.style.cursor=hit?'pointer':'grab';}else if(!app.entered)clearWorldSongHover();}
  const raycaster=new THREE.Raycaster(),ndc=new THREE.Vector2();
@@ -365,12 +433,12 @@ async function initWorld(){let THREE;try{THREE=await import('https://cdn.jsdeliv
  const onPointerDown=e=>{if(e.button!==0)return;wasClicked=false;dragging=true;dragLastX=e.clientX};const onPointerUp=e=>{dragging=false;if(wasClicked||!app.entered||app.catalog||app.drawer||app.info)return;const hit=pick(e);if(!hit)return;const target=hit.object.userData;const song=target.trackSong;if(song){if(focusedWorldSong===hit.object){clearArtifactFocus();return}focusArtifact(hit.object);if(song.previewUrl){previewPinned=true;if(activePreviewTrack===song.previewUrl&&!previewAudio.paused)showPreviewStatus(song.name,'◉ PREVIEW PINNED · PRESS STOP TO END');else void startPreview(song,worldRow)}return}if(target.releaseId)openDrawer(target.releaseId);else if(target.trackIndex!==undefined)openDrawer('last-laugh')};
  renderer.domElement.addEventListener('pointermove',onPointerMove,{passive:true});renderer.domElement.addEventListener('pointerleave',clearWorldSongHover);renderer.domElement.addEventListener('pointerdown',onPointerDown);window.addEventListener('pointerup',onPointerUp);
  let frames=0,rafId=0;camera.position.set(0,2.6,targetCameraZ);camera.lookAt(1.8,2.3,centerZ(0)-3);
- function animate(){if(disposed)return;rafId=requestAnimationFrame(animate);const dt=Math.min(clock.getDelta(),.05);motion+=dt;const targetX=(pointerX*.55)+dragOffset;dragOffset*=.984;const vx=targetX+Math.sin(motion*.18)*.13;const destZ=targetCameraZ;groups.forEach((g,j)=>{g.visible=Math.abs(j-app.index)<=1});const eased=prefersReduced?.13:.035;camera.position.z+=(destZ-camera.position.z)*eased;camera.position.x+=(vx-camera.position.x)*.03;camera.position.y+=(2.75-pointerY*.35-camera.position.y)*.034;camera.lookAt(1.9+vx*.42,2.2-pointerY*.24,camera.position.z-14.5);
- if(!prefersReduced){for(const v of animations){const o=v.obj,s=motion+(v.offset||0);if(v.kind==='song'){o.position.y=v.y+Math.sin(s*.78)*.075}else if(v.kind==='art'){o.position.y=v.y+Math.sin(s*.48)*.16;o.rotation.y=v.baseRot+Math.sin(s*.29)*.08}else if(v.kind==='shard'){o.rotation.z+=dt*.042}else if(v.kind==='slowspin'){o.rotation.y+=dt*.07}else if(v.kind==='spin'){o.rotation.y+=dt*.14;o.rotation.z+=dt*.1}else if(v.kind==='particle'){o.rotation.y+=dt*.004}else if(v.kind==='vinyl'){o.rotation.z+=dt*.16;o.position.z=-2.75+Math.sin(s*.6)*.13}else if(v.kind==='vault'){o.rotation.z+=dt*.012}}}
+ function animate(){if(disposed)return;rafId=requestAnimationFrame(animate);if(document.hidden)return;const dt=Math.min(clock.getDelta(),.05);motion+=dt;const targetX=(pointerX*.55)+dragOffset;dragOffset*=.984;const vx=targetX+Math.sin(motion*.18)*.13;const destZ=targetCameraZ;groups.forEach((g,j)=>{g.visible=Math.abs(j-app.index)<=1});const eased=prefersReduced?.13:.035;camera.position.z+=(destZ-camera.position.z)*eased;camera.position.x+=(vx-camera.position.x)*.03;camera.position.y+=(2.75-pointerY*.35-camera.position.y)*.034;camera.lookAt(1.9+vx*.42,2.2-pointerY*.24,camera.position.z-14.5);
+ if(!prefersReduced){for(const v of animations){if(v.eraIndex!==undefined&&v.eraIndex!==app.index)continue;const o=v.obj,s=motion+(v.offset||0);if(v.kind==='song'){o.position.y=v.y+Math.sin(s*.78)*.075}else if(v.kind==='art'){o.position.y=v.y+Math.sin(s*.48)*.16;o.rotation.y=v.baseRot+Math.sin(s*.29)*.08}else if(v.kind==='shard'){o.rotation.z+=dt*.042}else if(v.kind==='slowspin'){o.rotation.y+=dt*.07}else if(v.kind==='spin'){o.rotation.y+=dt*.14;o.rotation.z+=dt*.1}else if(v.kind==='particle'){o.rotation.y+=dt*.004}else if(v.kind==='vinyl'){o.rotation.z+=dt*.16;o.position.z=-2.75+Math.sin(s*.6)*.13}else if(v.kind==='vault'){o.rotation.z+=dt*.012}}}
   // Each artifact follows a different slow orbital drift. Hover locks it into a highlighted state.
   const rack=songRacks.get(app.index);
   if(rack)for(const v of rack.motions){
-   const hover=hoveredWorldSong===v.hit||focusedWorldSong===v.hit;
+   const hover=hoveredWorldSong===v.hit||focusedWorldSong===v.hit||v.hit?.userData?.trackIndex===keyboardHighlighted;
    const s=motion*v.velocity+v.phase;
    v.obj.position.set(v.base.x+(prefersReduced?0:Math.sin(s)*.28),v.base.y+(prefersReduced?0:Math.cos(s*.85)*.32),v.base.z+(prefersReduced?0:Math.sin(s*.69)*.39));
    if(!prefersReduced){v.model.rotation.y+=dt*(hover?.6:.17);v.model.rotation.z+=dt*.042;}
@@ -388,15 +456,32 @@ async function initWorld(){let THREE;try{THREE=await import('https://cdn.jsdeliv
   }
  renderer.render(scene,camera);frames++}
  animate();
- const resize=()=>{camera.aspect=innerWidth/innerHeight;camera.fov=touchScreen?68:52;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio||1,touchScreen?1.4:1.8))};window.addEventListener('resize',resize,{passive:true});
+ const resize=()=>{camera.aspect=innerWidth/innerHeight;camera.fov=touchScreen?68:52;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio||1,reducedGraphics?1:(touchScreen?1.25:1.5)))};window.addEventListener('resize',resize,{passive:true});
  window.addEventListener('pagehide',()=>{disposed=true;cancelAnimationFrame(rafId);renderer.dispose();for(const g of groups)g.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material){for(const m of (Array.isArray(o.material)?o.material:[o.material])){if(m.map)m.map.dispose();m.dispose()}}})},{once:true});
- return {setEra(i,instant){clearWorldSongHover();clearArtifactFocus();const prev=active;active=i;targetCameraZ=centerZ(i)+15.5;if(instant)camera.position.z=targetCameraZ;if(prev!==i){const old=songRacks.get(prev);if(old)disposeRack(old)}const rack=songRacks.get(i);if(rack&&!rack.loaded)drawSongRack(i);updateWorldSongPager(rack,rack?trackRows(RELEASES.find(r=>r.id===rack.releaseId)).length:0)},setTracks,changeSongPage:changeWorldSongPage,clearFocus:clearArtifactFocus,addCover:updateTexture};
+ return {setEra(i,instant){clearWorldSongHover();clearArtifactFocus();const prev=active;buildStage(i);active=i;targetCameraZ=centerZ(i)+15.5;if(instant)camera.position.z=targetCameraZ;if(prev!==i){const old=songRacks.get(prev);if(old)disposeRack(old)}const rack=songRacks.get(i);if(rack&&!rack.loaded)drawSongRack(i);updateWorldSongPager(rack,rack?trackRows(RELEASES.find(r=>r.id===rack.releaseId)).length:0)},setTracks,changeSongPage:changeWorldSongPage,highlightTrack,clearFocus:clearArtifactFocus,addCover:updateTexture,setQuality(low){renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,low?1:(touchScreen?1.25:1.5)));for(const v of animations)if(v.kind==='particle')v.obj.visible=!low}};
 }
 
 function enter(){if(app.entered)return;app.entered=true;$('#preloader').hidden=true;$('#entry').classList.add('hidden-entry');setTimeout(()=>{$('#entry').hidden=true},850);$('#topbar').hidden=false;$('#experience').hidden=false;$('#yearRail').hidden=false;$('#nextButton').focus({preventScroll:true});warmEraSongs(app.index);if(app.world)app.world.setEra(app.index,true);}
-function initControls(){$('#worldSongPrev').addEventListener('click',()=>app.world?.changeSongPage(-1));$('#worldSongNext').addEventListener('click',()=>app.world?.changeSongPage(1));$('#previewStop').addEventListener('click',stopPreview);$('#songFocusClose').addEventListener('click',()=>app.world?.clearFocus());document.addEventListener('visibilitychange',()=>{if(document.hidden)stopPreview()});createRail();updateEraUI();$('#enterButton').addEventListener('click',enter);$('#skipButton').addEventListener('click',enter);$('#brandButton').addEventListener('click',()=>goTo(0));$('#inspectButton').addEventListener('click',()=>openDrawer());$('#nextFromCopy').addEventListener('click',next);$('#prevButton').addEventListener('click',previous);$('#nextButton').addEventListener('click',next);$('#drawerClose').addEventListener('click',closeDrawer);$('#catalogButton').addEventListener('click',openCatalog);$('#catalogClose').addEventListener('click',closeCatalog);$('#catalogSearch').addEventListener('input',renderCatalog);$('#aboutButton').addEventListener('click',openInfo);$('#infoClose').addEventListener('click',closeInfo);
+function initControls(){
+ const graphicControl=$('#graphicsToggle');if(graphicControl){
+  graphicControl.setAttribute('aria-pressed',String(reducedGraphics));
+  graphicControl.addEventListener('click',()=>{reducedGraphics=!reducedGraphics;
+   graphicControl.setAttribute('aria-pressed',String(reducedGraphics));graphicControl.textContent=reducedGraphics?'Use full graphics':'Use reduced graphics';
+   try{localStorage.setItem('lucki-archive-reduced-graphics',reducedGraphics?'yes':'no')}catch{}
+   app.world?.setQuality(reducedGraphics);
+  });
+  graphicControl.textContent=reducedGraphics?'Use full graphics':'Use reduced graphics';
+ }
+ $('#songIndexToggle').addEventListener('click',()=>showSongIndex());
+ $('#songIndexClose').addEventListener('click',()=>showSongIndex(false));
+ $('#hoverPreviewOptIn').addEventListener('change',e=>{hoverPreviewsEnabled=e.target.checked;
+  try{localStorage.setItem('lucki-archive-hover-previews',hoverPreviewsEnabled?'yes':'no')}catch{}
+  if(!hoverPreviewsEnabled)stopPreview();syncHoverChoice();
+ });
+ syncHoverChoice();
+ $('#worldSongPrev').addEventListener('click',()=>app.world?.changeSongPage(-1));$('#worldSongNext').addEventListener('click',()=>app.world?.changeSongPage(1));$('#previewStop').addEventListener('click',stopPreview);$('#songFocusClose').addEventListener('click',()=>app.world?.clearFocus());document.addEventListener('visibilitychange',()=>{if(document.hidden)stopPreview()});createRail();updateEraUI();$('#enterButton').addEventListener('click',enter);$('#skipButton').addEventListener('click',enter);$('#brandButton').addEventListener('click',()=>goTo(0));$('#inspectButton').addEventListener('click',()=>openDrawer());$('#nextFromCopy').addEventListener('click',next);$('#prevButton').addEventListener('click',previous);$('#nextButton').addEventListener('click',next);$('#drawerClose').addEventListener('click',closeDrawer);$('#catalogButton').addEventListener('click',openCatalog);$('#catalogClose').addEventListener('click',closeCatalog);$('#catalogSearch').addEventListener('input',renderCatalog);$('#aboutButton').addEventListener('click',openInfo);$('#infoClose').addEventListener('click',closeInfo);
  let lastWheel=0,wheelAccum=0;window.addEventListener('wheel',e=>{if(!app.entered||app.drawer||app.catalog||app.info)return;e.preventDefault();const now=performance.now();if(now-lastWheel<800)return;wheelAccum+=e.deltaY;if(Math.abs(wheelAccum)<18)return;goTo(app.index+Math.sign(wheelAccum));lastWheel=now;wheelAccum=0},{passive:false});
- window.addEventListener('keydown',e=>{if(e.key==='Escape'){if(app.catalog)closeCatalog();else if(app.info)closeInfo();else if(app.drawer)closeDrawer();else app.world?.clearFocus();return}if(!app.entered||app.drawer||app.catalog||app.info||['INPUT','TEXTAREA'].includes(document.activeElement?.tagName))return;if(['ArrowRight','ArrowDown','PageDown',' '].includes(e.key)){e.preventDefault();next()}else if(['ArrowLeft','ArrowUp','PageUp'].includes(e.key)){e.preventDefault();previous()}else if(e.key==='Home'){e.preventDefault();goTo(0)}else if(e.key==='End'){e.preventDefault();goTo(ERAS.length-1)}else if(e.key.toLowerCase()==='a')openCatalog()});
+ window.addEventListener('keydown',e=>{if(e.key==='Escape'){if(app.catalog)closeCatalog();else if(app.info)closeInfo();else if(app.drawer)closeDrawer();else if(!$('#songIndexPanel').hidden)showSongIndex(false);else app.world?.clearFocus();return}if(!app.entered||app.drawer||app.catalog||app.info||['INPUT','TEXTAREA'].includes(document.activeElement?.tagName))return;if(['ArrowRight','ArrowDown','PageDown',' '].includes(e.key)){e.preventDefault();next()}else if(['ArrowLeft','ArrowUp','PageUp'].includes(e.key)){e.preventDefault();previous()}else if(e.key==='Home'){e.preventDefault();goTo(0)}else if(e.key==='End'){e.preventDefault();goTo(ERAS.length-1)}else if(e.key.toLowerCase()==='a')openCatalog();else if(e.key.toLowerCase()==='s')showSongIndex()});
  let sx=0,sy=0;const touchMoveStart=e=>{sx=e.touches[0].clientX;sy=e.touches[0].clientY};window.addEventListener('touchstart',touchMoveStart,{passive:true});window.addEventListener('touchend',e=>{if(!app.entered||app.drawer||app.catalog||app.info)return;const dx=e.changedTouches[0].clientX-sx,dy=e.changedTouches[0].clientY-sy;if(Math.abs(dx)>60||Math.abs(dy)>70){if(Math.abs(dx)>Math.abs(dy))goTo(app.index+(dx<0?1:-1));else goTo(app.index+(dy<0?1:-1))}},{passive:true});
  if(!touchScreen){window.addEventListener('pointermove',e=>{$('#cursor').style.left=e.clientX+'px';$('#cursor').style.top=e.clientY+'px'},{passive:true});document.addEventListener('pointerover',e=>{$('#cursor').classList.toggle('hover',Boolean(e.target.closest('button,a'))||e.target.tagName==='CANVAS')})}else $('#cursor').hidden=true;
 }
@@ -415,7 +500,7 @@ async function init(){
   } finally {
     clearTimeout(timeout);
     $('#loadFill').style.width='100%';
-    $('#loadText').textContent=app.world?'3D WORLDS READY':'GALLERY MODE READY';
+    $('#loadText').textContent=app.world?'3D WORLDS READY':'GALLERY MODE READY · SONGS ACCESSIBLE';
     setTimeout(()=>{$('#preloader').hidden=true},250);
   }
 }

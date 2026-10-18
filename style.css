@@ -78,3 +78,51 @@
 .world-song-pager.single-page>div{display:none}.world-song-pager small{letter-spacing:.08em}
 @media(max-width:790px){.artifact-tooltip{display:none}.song-focus{bottom:91px;left:50%;width:min(330px,82vw);padding:13px 15px}.song-focus>strong{font-size:19px}.song-focus>small{font-size:8px}.world-song-pager{right:15px;bottom:145px}.world-song-pager small{display:none}}
 @media(prefers-reduced-motion:reduce){.tooltip-wave b{animation:none}.song-focus{animation:none}}
+
+/* Apple Design Skill implementation: readable controls while preserving the immersive gallery. */
+:root{--label-size:clamp(12px,0.9vw,14px);--body-size:clamp(14px,1.08vw,16px)}
+.mono,.eyebrow,.tiny{font-size:12px;line-height:1.55;letter-spacing:.065em}
+.era-desc,.drawer-describe,.entry-pitch{font-size:var(--body-size);line-height:1.65}
+.era-date,.scene-hint,.chapter-meta,.meta-bracket,.top-center,.entry-lower span,.foot-tip,.world-caption span,.song-number,.track-credit,.preview-meta small,.world-song-pager small,.cover-meta em,.control-top,.songs-heading,.song-focus small,.artifact-tooltip small{font-size:var(--label-size);line-height:1.45}
+.world-caption strong,.song-title,.cover-meta strong,.year-stop,.song-row{font-size:13px}
+button:focus-visible,a:focus-visible,input:focus-visible{outline:3px solid #e4f5bb;outline-offset:4px}
+.year-stop{min-height:36px;min-width:70px;padding:8px 7px;gap:8px}
+.year-stop .dot{width:12px;height:12px}
+.header-link,.header-menu,.cta-main,.cta-next,.world-controls button,.world-song-pager button,.drawer-top button,.big-close,.song-index-toggle,.song-index-heading button,.song-index-album-link{min-height:40px}
+#previewStop,.song-focus button,.drawer-release,.song-row{min-height:40px}
+.song-row:disabled{cursor:default}
+/* Spatial song discovery is optional, accessible song controls are not. */
+.song-index-toggle{position:fixed;z-index:12;top:154px;right:clamp(18px,3vw,50px);padding:10px 17px;border:1px solid #e2e8d85a;background:#101613ee;color:#f1f4ed;font:600 13px/1.4 var(--body);letter-spacing:.025em;box-shadow:0 10px 35px #0008;pointer-events:auto;backdrop-filter:blur(8px)}
+.song-index-toggle[aria-expanded=true],.song-index-toggle:hover{border-color:var(--accent);background:#202c23}
+.song-index-panel{position:fixed;z-index:20;top:205px;right:clamp(18px,3vw,50px);width:min(395px,calc(100vw - 36px));max-height:min(66vh,650px);overflow:auto;padding:20px;background:#0d1413f2;box-shadow:0 22px 85px #000d;border:1px solid #d8e2d17d;backdrop-filter:blur(14px);pointer-events:auto;overscroll-behavior:contain}
+.song-index-heading{display:flex;justify-content:space-between;gap:15px;align-items:flex-start;margin-bottom:15px}
+.song-index-heading .mono{color:var(--accent);font-size:12px}
+.song-index-heading h3{font:700 21px/1.2 var(--body);letter-spacing:-.025em;margin:5px 0 0;max-width:280px}
+.song-index-heading button{min-width:42px;border:1px solid #ffffff55;color:#fff;background:#101b18;font-size:24px}
+.hover-option{display:flex;align-items:center;gap:10px;min-height:44px;color:#e1e6de;font:600 14px/1.3 var(--body);cursor:pointer}
+.hover-option input{accent-color:var(--accent);width:20px;height:20px;flex:none}
+.index-description{color:#cdd3cc;font:13px/1.55 var(--body);margin:4px 0 17px}
+.song-index-list{display:grid;gap:5px}
+.accessible-track{display:grid;grid-template-columns:32px minmax(0,1fr) 37px 21px;align-items:center;gap:10px;width:100%;min-height:47px;padding:10px 9px;border:1px solid transparent;border-bottom-color:#e9f1e929;color:#f3f5ed;text-align:left;background:#ffffff06;cursor:pointer}
+.accessible-track:hover,.accessible-track:focus-visible,.accessible-track.is-playing{border-color:var(--accent);background:#b3daab1a}
+.accessible-track .track-order,.accessible-track .track-length{font:12px var(--mono);color:#b3bcb2}
+.accessible-track .track-title{font:600 14px/1.4 var(--body);overflow-wrap:anywhere}
+.accessible-track>span:last-child{color:var(--accent)}
+.song-index-album-link{width:100%;background:transparent;color:#f2f2eb;border:1px solid #d5ee9d60;padding:10px}
+/* Hide atmospheric marginal labels when there isn't space for both art and controls. */
+@media(max-width:1050px){.foot-tip,.edge-label{display:none}.scene-hint{display:none}.chapter-meta{font-size:12px}}
+@media(max-width:790px){.song-index-toggle{top:78px;right:15px;padding:8px 12px;min-height:44px}.song-index-panel{top:130px;right:12px;max-height:calc(100dvh - 185px);width:min(420px,calc(100vw - 24px))}.year-stop{min-width:0;min-height:44px;padding:8px 3px}.year-stop .dot{width:12px;height:12px}.journey-copy{bottom:145px}.era-desc{font-size:14px}}
+@media(max-width:440px){.song-index-panel{top:132px;max-height:calc(100dvh - 170px)}.song-index-toggle{font-size:12px}.chapter-meta{display:none}.world-song-pager{display:none}.entry-pitch{font-size:14px}}
+@media(hover:none),(pointer:coarse){button,a,[role=button]{touch-action:manipulation}.world-caption,.header-link,.header-menu,.year-stop,.cta-main,.cta-next,.world-controls button,.world-song-pager button{min-height:44px}}
+@media(prefers-contrast:more){.song-index-panel,.drawer,.catalog-overlay,.info-overlay{background:#060807;border-color:#fff}.mono,.eyebrow,.tiny,.era-desc,.index-description{color:#fff}.world-caption,.accessible-track{border-color:#e4f5bb}.year-stop{color:#fff}}
+@media(prefers-reduced-transparency:reduce){.song-index-panel,.song-index-toggle,.drawer,.catalog-overlay,.info-overlay,.world-caption{backdrop-filter:none!important;background:#0a0d0c!important}}
+@media(forced-colors:active){.song-index-panel,.song-index-toggle,.accessible-track,.world-caption{forced-color-adjust:auto;border:1px solid CanvasText}.accessible-track:focus-visible{outline:3px solid Highlight}}
+@media(prefers-reduced-motion:reduce){.song-index-toggle,.song-index-panel,.accessible-track{animation:none!important;transition:none!important}}
+
+/* Remove repeated atmospheric chrome; the album and year provide context already. */
+.edge-label,.meta-bracket{display:none}
+
+.song-index-panel{background:#101612;backdrop-filter:none}
+.graphics-toggle{min-height:44px;border:1px solid var(--sharp);background:#131a17;color:#edf4ea;padding:10px 16px;font:600 14px/1.4 var(--body)}
+.graphics-toggle[aria-pressed=true]{background:#d5ee9d;color:#091009}
+@media(max-width:790px){.chapter-meta .mono,.world-song-pager .mono,.year-stop span,.entry-lower .mono{font-size:12px}}

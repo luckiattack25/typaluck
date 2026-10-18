@@ -35,3 +35,11 @@ Labels beneath 3D cover objects are real high-resolution HTML text projected fro
 Public streaming-catalog APIs and the Three.js module are external resources; availability varies by browser or network restrictions. The main archive has a CSS-based fallback if WebGL is disabled or unavailable. Audio playback can require an explicit user click depending on browser autoplay policy.
 
 Data sources include publicly available Apple Music/iTunes metadata, the artist's verified releases, and original Son of Sam listings. The graphics are creative fan-made interpretations and are not represented as official artist artwork.
+
+## Usability and accessibility (October 2026)
+
+- **Browse songs** is a keyboard-accessible companion to the 3D sound artifacts, and is available when WebGL is unavailable. Press **S** while exploring to toggle it.
+- Hover audio is off by default. Enable it deliberately in Browse songs. Clicking an available song plays its official short preview; the preview HUD always has Stop.
+- Drawers/overlays trap focus and return it when dismissed; Escape closes them.
+- Font sizes and touch controls have been increased. Reduced motion, high contrast and reduced transparency are supported; the About panel includes a reduced graphics setting.
+- Detailed changes and remaining testing limitations are documented in `DESIGN_IMPLEMENTATION.md`. Refer to `AGENTS.md` and `DESIGN_REVIEW_APPLE.md` for the project design standard.
